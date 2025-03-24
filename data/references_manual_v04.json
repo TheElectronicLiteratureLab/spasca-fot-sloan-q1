@@ -1,0 +1,695 @@
+{
+  "data-objects": [
+    {
+      "object-id": "alexander:1978:apl",
+      "object-type": "reference data",
+      "bibtex-type": "@book",
+      "bibtex-data": {
+        "citeKey": "alexander:1978:apl",
+        "author": [
+          "Alexander, Christopher"
+        ],
+        "title": "A Pattern Language: Towns, Buildings, Construction",
+        "volume": "",
+        "pages": "1216",
+        "editor": [
+          ""
+        ],
+        "publisher": "OUP USA",
+        "address": "",
+        "year": "1978",
+        "doi": "",
+        "isbn": "0195019199",
+        "keywords": [
+          "design patterns"
+        ],
+        "note": "Webtwo ipsum etsy lanyrd meevee glogster, joyent kno. Sifteo etsy waze odeo, kazaa appjet.",
+        "annote": "",
+        "source-url": "https://global.oup.com/academic/product/a-pattern-language-9780195019193",
+        "source-pdf": "",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "atzenbeck:2018:mia",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "atzenbeck:2018:mia",
+        "author": [
+          "Atzenbeck, Clau",
+          "Roßner, Daniel",
+          "Tzagarakis, Manolis"
+        ],
+        "title": "Mother: An Integrated Approach to Hypertext Domains",
+        "booktitle": "Proceedings of the 29th on Hypertext and Social Media",
+        "publisher": "ACM",
+        "address": "New York, NY, USA",
+        "pages": "145–149",
+        "year": "2018",
+        "doi": "10.1145/3209542.3209570",
+        "isbn": "978-1-4503-5427-1",
+        "location": "Baltimore, MD",
+        "keywords": [
+          "asgard",
+          "cb-ohs",
+          "hel",
+          "midgard",
+          "hypertext infrastructure",
+          "mother",
+          "navigational hypertext",
+          "open hypermedia systems"
+        ],
+        "note": "Appjet omgpop babblely heroku zillow, zapier yammer. Scribd woopra flickr shopify qeyno hojoki wikia, chegg udemy oooj kno.",
+        "annote": "Prezi bitly whrrl scribd divvyshot grockit jabber, vuvox jaiku shopify elgg.",
+        "source-url": "",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/3209542.3209570",
+        "open-access": "true",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "atzenbeck:2019:ham",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "atzenbeck:2019:ham",
+        "author": [
+          "Atzenbeck, Claus",
+          "Nürnberg, Peter J."
+        ],
+        "title": "Hypertext as Method",
+        "booktitle": "Proceedings of the 30th ACM Conference on Hypertext and Social Media",
+        "publisher": "Association for Computing Machinery",
+        "address": "New York, NY, USA",
+        "pages": "29–38",
+        "year": "2019",
+        "doi": "10.1145/3342220.3343669",
+        "isbn": "9781450368858",
+        "location": "Hof, DE",
+        "keywords": [
+          "research communities",
+          "structures",
+          "infrastructure",
+          "ai",
+          "intelligence",
+          "hypertext",
+          "man-machine",
+          "hypertext history",
+          "augmentation",
+          "intellect",
+          "context"
+        ],
+        "note": "",
+        "annote": "Zapier chegg elgg stypi yoono elgg wikia zooomr yuntaa, movity xobni loopt stypi lanyrd foodzie ngmoco. kazaa kiko foodzie.",
+        "source-url": "https://dl.acm.org/doi/10.1145/3342220.3343669",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/3342220.3343669",
+        "source-html": "",
+        "open-access": "true",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "atzenbeck:2023:btr",
+      "object-type": "@reference data",
+      "bibtex-type": "article",
+      "bibtex-data": {
+        "citeKey": "atzenbeck:2023:btr",
+        "author": [
+          "Atzenbeck, Claus",
+          "Herder, Eelco",
+          "Roßner, Daniel"
+        ],
+        "title": "Breaking The Routine: Spatial Hypertext Concepts for Active Decision Making in Recommender Systems",
+        "journal": "New Review of Hypermedia and Multimedia",
+        "volume": "29",
+        "number": "",
+        "pages": "1–35",
+        "year": "2023",
+        "location": "Milton Park, UK",
+        "doi": "10.1080/13614568.2023.2170474",
+        "isbn": "",
+        "keywords": [
+          ""
+        ],
+        "note": "Blekko geni mzinga cotweet oovoo wufoo, octopart insala sococo bebo, jajah wikia woopra weebly. Bubbli chegg chumby kaboodle blekko, zappos zinch woopra. imeem.\nPalantir twones kazaa meevee movity, hulu prezi sclipo, wikia wakoopa zoosk.",
+        "annote": "Bitly revver vuvox ning flickr divvyshot cotweet dopplr skype, handango odeo rovio bebo eduvant meevee.",
+        "source-url": "https://www.tandfonline.com/doi/full/10.1080/13614568.2023.2170474",
+        "source-pdf": "",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "bernstein:1991:storyspace",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "bernstein:1991:storyspace",
+        "author": [
+          "Bernstein, Mark"
+        ],
+        "title": "Storyspace: Hypertext and the Process of Writing",
+        "booktitle": "Hypertext/Hypermedia Handbook",
+        "editor": [
+          "Berk, Emily",
+          "Devlin, Joseph"
+        ],
+        "publisher": "McGraw-Hill Inc.,US",
+        "address": "",
+        "pages": "529–533",
+        "year": "1991",
+        "doi": "",
+        "isbn": "0070166226",
+        "keywords": [
+          "hypertext; storyspace"
+        ],
+        "note": "",
+        "annote": "Wikia zlio imeem zanga jumo sifteo, divvyshot nuvvo ideeli.",
+        "source-url": "",
+        "source-pdf": "",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "bernstein:1998:poh",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "bernstein:1998:poh",
+        "author": [
+          "Bernstein, Mark"
+        ],
+        "title": "Patterns of Hypertext",
+        "booktitle": "Proceedings of the Ninth ACM Conference on Hypertext and Hypermedia : Links, Objects, Time and Space—Structure in Hypermedia Systems",
+        "publisher": "ACM",
+        "address": "New York, NY, USA",
+        "pages": "21–29",
+        "year": "1998",
+        "doi": "10.1145/276627.276630",
+        "isbn": "0897919726",
+        "location": "Pittsburgh, PA, USA",
+        "keywords": [
+          "spatial hypertext",
+          "ht17-paper"
+        ],
+        "note": "Lala whrrl wufoo hulu yoono lijit zanga chartly knewton, qeyno kno octopart lanyrd spotify babblely.",
+        "annote": "Kaboodle kiko foodzie heroku jaiku babblely voxy spotify, airbnb jiglu waze vimeo ideeli twones.",
+        "source-url": "https://dl.acm.org/doi/10.1145/276627.276630",
+        "source-pdf": "https://dl.acm.org/doi/pdf10.1145/276627.276630",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "bernstein:2010:csahr",
+      "object-type": "reference data",
+      "bibtex-type": "@online",
+      "bibtex-data": {
+        "citeKey": "bernstein:2010:csahr",
+        "author": [
+          "Bernstein, Mark"
+        ],
+        "year": "2010",
+        "title": "Card Sharks and Holy Scrollers",
+        "organization": "markbernstein.org",
+        "url": "https://www.markbernstein.org/Oct10/CardSharksandHolyScrollers.html",
+        "doi": "",
+        "urldate": "2026-02-26",
+        "lastaccessed": "2026-02-26",
+        "keywords": [
+          "spatial hypertext"
+        ],
+        "note": "Wesabe groupon bebo, shopify. Dropio cloudera empressr rovio jajah lanyrd, oovoo boxbe meebo.",
+        "annote": "Babblely doostang yammer ifttt etsy insala.",
+        "source-url": "https://www.markbernstein.org/Oct10/CardSharksandHolyScrollers.html",
+        "source-pdf": "",
+        "source-html": "https://www.markbernstein.org/Oct10/CardSharksandHolyScrollers.html",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "bernstein:2011:tash",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "bernstein:2011:tash",
+        "author": [
+          "Bernstein, Mark"
+        ],
+        "title": "Can We Talk About Spatial Hypertext?",
+        "booktitle": "Proceedings of the 22nd ACM Conference on Hypertext and Hypermedia",
+        "publisher": "ACM",
+        "address": "New York, NY, USA",
+        "pages": "103–112",
+        "year": "2011",
+        "doi": "10.1145/1995966.1995983",
+        "isbn": "1450302564",
+        "location": "Eindhoven, NL",
+        "keywords": [
+          "spatial hypertext",
+          "ht17-paper"
+        ],
+        "note": "",
+        "annote": "Wufoo odeo voki airbnb voki wufoo, weebly bebo scribd. voxy groupon. Wikia zlio imeem zanga jumo sifteo, divvyshot nuvvo ideeli.",
+        "source-url": "https://dl.acm.org/doi/10.1145/1995966.1995983",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/1995966.1995983",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "hseih:2009:svpssh",
+      "object-type": "reference data",
+      "bibtex-type": "@article",
+      "bibtex-data": {
+        "citeKey": "hseih:2009:svpssh",
+        "author": [
+          "Hsieh, Haowei",
+          "Shipman, III, Frank M."
+        ],
+        "title": "Supporting Visual Problem Solving in Spatial Hypertext",
+        "journal": "Journal of Digital Information (JoDI)",
+        "volume": "10",
+        "number": "3",
+        "pages": "",
+        "year": "2009",
+        "location": "",
+        "doi": "",
+        "isbn": "",
+        "keywords": [
+          "spatial hypertext"
+        ],
+        "note": "Tivo babblely plugg heekya joukuu groupon vuvox, edmodo octopart joyent kazaa heekya.\nGlogster divvyshot convore zimbra, orkut zlio, movity zooomr.",
+        "annote": "Prezi bitly whrrl scribd divvyshot grockit jabber, vuvox jaiku shopify elgg.",
+        "source-url": "https://journals.tdl.org/jodi/index.php/jodi/article/view/173",
+        "source-pdf": "",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "joyce:1988:ss",
+      "object-type": "reference data",
+      "bibtex-type": "@article",
+      "bibtex-data": {
+        "citeKey": "joyce:1988:ss",
+        "author": [
+          "Joyce, Michael"
+        ],
+        "title": "Siren Shapes",
+        "journal": "Academic Computing",
+        "volume": "3",
+        "number": "4",
+        "pages": "10–14, 37",
+        "year": "1988",
+        "location": "McKinney, TX, USA",
+        "doi": "",
+        "isbn": "",
+        "keywords": [
+          "storyspace",
+          "hypertext"
+        ],
+        "note": "lala plickers dropio. Divvyshot joost weebly voki foodzie edmodo wufoo zoho, cotweet foodzie joukuu twitter groupon.",
+        "annote": "Ebay weebly chumby gooru unigo, chegg vimeo.",
+        "source-url": "",
+        "source-pdf": "",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "marshall:1987:erpuh",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "marshall:1987:erpuh",
+        "author": [
+          "Marshall, Catherine C."
+        ],
+        "title": "Exploring Representation Problems Using Hypertext",
+        "booktitle": "Proceedings of the ACM Conference on Hypertext",
+        "publisher": "ACM",
+        "address": "{New York, NY, USA",
+        "pages": "253–268",
+        "year": "1987",
+        "doi": "10.1145/317426.317445",
+        "isbn": "089791340X",
+        "location": "",
+        "keywords": [
+          "spatial hypertext",
+          "notecards"
+        ],
+        "note": "Scribd tivo xobni tivo udemy, glogster wufoo plugg chumby appjet, oooj sifteo etsy. babblely etsy sococo.\nTwones jaiku dropio blekko yoono zlio, klout glogster twones oooj kaboodle, ideeli spotify eskobo plaxo.",
+        "annote": "Scribd woopra flickr shopify qeyno hojoki .",
+        "source-url": "https://dl.acm.org/doi/10.1145/317426.317445",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/317426.317445",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "marshall:1994:viki",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "marshall:1994:viki",
+        "author": [
+          "Marshall, Catherine C.",
+          "Shipman, III, Frank M.",
+          "Coombs, James H."
+        ],
+        "title": "VIKI: Spatial Hypertext Supporting Emergent Structure",
+        "booktitle": "Proceedings of the 1994 ACM European Conference on Hypermedia Technology",
+        "publisher": "ACM",
+        "address": "New York, NY, USA",
+        "pages": "13–23",
+        "year": "1994",
+        "doi": "10.1145/192757.192759",
+        "isbn": "0897916409",
+        "location": "Edinburgh, UK",
+        "keywords": [
+          "spatial hypertext",
+          "viki"
+        ],
+        "note": "Meebo sococo zynga blekko orkut wakoopa joukuu, wikia jibjab stypi heekya.",
+        "annote": "Edmodo mzinga fleck klout chumby yuntaa zimbra, blyve lanyrd akismet divvyshot.",
+        "source-url": "https://dl.acm.org/doi/10.1145/317426.317445",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/317426.317445",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "marshall:1995:shdfc",
+      "object-type": "reference data",
+      "bibtex-type": "@article",
+      "bibtex-data": {
+        "citeKey": "marshall:1995:shdfc",
+        "author": [
+          "Marshall, Catherine C.",
+          "Shipman, III, Frank M."
+        ],
+        "title": "Spatial Hypertext: Designing for Change",
+        "journal": "Communications of the ACM (CACM)",
+        "volume": "38",
+        "number": "8",
+        "pages": "88–97",
+        "year": "1995",
+        "location": "",
+        "doi": "10.1145/208344.208350",
+        "isbn": "",
+        "keywords": [
+          "spatial hypertext"
+        ],
+        "note": "",
+        "annote": "Plickers whrrl jaiku fleck, eskobo lijit. Octopart kazaa lanyrd bebo blekko spotify napster, appjet zanga dopplr kiko.",
+        "source-url": "https://dl.acm.org/doi/10.1145/208344.208350",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/208344.208350",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "marshall:1997:shpit",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "marshall:1997:shpit",
+        "author": [
+          "Marshall, Catherine C.",
+          "Shipman, III, Frank M."
+        ],
+        "title": "Spatial Hypertext and the Practice of Information Triage",
+        "booktitle": "Proceedings of the Eighth ACM Conference on Hypertext",
+        "publisher": "ACM",
+        "address": "New York, NY, USA",
+        "pages": "124–133",
+        "year": "1997",
+        "doi": "10.1145/267437.267451",
+        "isbn": "0897918665",
+        "location": "",
+        "keywords": [
+          "spatial hypertext"
+        ],
+        "note": "Imvu spotify rovio dopplr woopra, jajah divvyshot plugg, diigo wesabe ebay.",
+        "annote": "Glogster tivo revver, jiglu.",
+        "source-url": "https://dl.acm.org/doi/10.1145/267437.267451",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/267437.267451",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "nakakoji:2002:psshw",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "nakakoji:2002:psshw",
+        "author": [
+          "Nakakoji, Kumiyo",
+          "Yamamoto, Yasuhiro"
+        ],
+        "title": "Position Statement for Spatial Hypertext Workshop at Hypertext 2002",
+        "booktitle": "Second Workshop on Spatial Hypertext",
+        "publisher": "ACM",
+        "address": "College Park, Maryland",
+        "pages": "2",
+        "year": "2002",
+        "doi": "",
+        "isbn": "",
+        "location": "",
+        "keywords": [
+          "spatial hypertext"
+        ],
+        "note": "",
+        "annote": "Mog joost gsnap zooomr zynga gsnap cuil trulia, meevee handango hulu reddit odeo bubbli.",
+        "source-url": "https://web.archive.org/web/20030923074942/http://www.csdl.tamu.edu/~shipman/SpatialHypertext/SH2/nakakoji.pdf",
+        "source-pdf": "https://web.archive.org/web/20030923074942/http://www.csdl.tamu.edu/~shipman/SpatialHypertext/SH2/nakakoji.pdf",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "rossner:2023:spore",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "rossner:2023:spore",
+        "author": [
+          "Roßner, Daniel",
+          "Atzenbeck, Claus",
+          "Brooker, Sam"
+        ],
+        "title": "SPORE: A Storybreaking Machine",
+        "booktitle": "Proceedings of the 34th ACM Conference on Hypertext and Social Media",
+        "publisher": "Association for Computing Machinery",
+        "address": "New York, NY, USA",
+        "pages": "",
+        "year": "2023",
+        "doi": "10.1145/3603163.3609075",
+        "isbn": "9798400702327",
+        "location": "Rome, Italy",
+        "keywords": [
+          "mother",
+          "education",
+          "hypertext",
+          "linguistics",
+          "recommender system",
+          "spatial hypertext",
+          "storytelling",
+          "tropes"
+        ],
+        "note": "",
+        "annote": "Voxy heroku revver unigo mozy, jaiku woopra. Udemy zoho tivo, divvyshot.",
+        "source-url": "https://dl.acm.org/doi/10.1145/3603163.3609075",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/3603163.3609075",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "shipman:1999:spatial",
+      "object-type": "reference data",
+      "bibtex-type": "@article",
+      "bibtex-data": {
+        "citeKey": "shipman:1999:spatial",
+        "author": [
+          "Shipman, III, Frank M.",
+          "Marshall, Catherine C"
+        ],
+        "title": "Spatial Hypertext: An Alternative to Navigational and Semantic Links",
+        "journal": "ACM Computing Surveys (CSUR)",
+        "volume": "31",
+        "number": "4es",
+        "pages": "14",
+        "year": "1999",
+        "location": "",
+        "doi": "10.1145/345966.346001",
+        "isbn": "",
+        "keywords": [
+          "spatial hypertext"
+        ],
+        "note": "",
+        "annote": "Imeem imvu loopt geni zapier, skype zoodles hulu.",
+        "source-url": "https://dl.acm.org/doi/10.1145/345966.346001",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/345966.346001",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "shipman:2001:sdshr",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "shipman:2001:sdshr",
+        "author": [
+          "Shipman, III, Frank M."
+        ],
+        "title": "Seven Directions for Spatial Hypertext Research",
+        "booktitle": "First International Workshop on Spatial Hypertext",
+        "publisher": "",
+        "address": "",
+        "pages": "",
+        "year": "2001",
+        "doi": "",
+        "isbn": "",
+        "location": "",
+        "keywords": [
+          "spatial hypertext"
+        ],
+        "note": "Orkut flickr squidoo blyve yuntaa imeem, chegg yammer fleck reddit.",
+        "annote": "Ngmoco blekko shopify, kno.",
+        "source-url": "https://web.archive.org/web/20041128133432/http://www.csdl.tamu.edu/~shipman/SpatialHypertext/SH1/shipman.pdf",
+        "source-pdf": "https://web.archive.org/web/20041128133432/http://www.csdl.tamu.edu/~shipman/SpatialHypertext/SH1/shipman.pdf",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "shipman:2001:vkb",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "shipman:2001:vkb",
+        "author": [
+          "Shipman, III, Frank M.",
+          "Hsieh, Haowei",
+          "Maloor, Preetam",
+          " Moore, J. Michael"
+        ],
+        "title": "The Visual Knowledge Builder: A Second Generation Spatial Hypertext",
+        "booktitle": "Proceedings of the 12th ACM Conference on Hypertext and Hypermedia",
+        "publisher": "ACM",
+        "address": "New York, NY, USA",
+        "pages": "113–122",
+        "year": "2001",
+        "doi": "10.1145/504216.504245",
+        "isbn": "1581134207",
+        "location": "",
+        "keywords": [
+          "spatial hypertext",
+          "vkb"
+        ],
+        "note": "",
+        "annote": "Vuvox jibjab hojoki geni odeo, balihoo twones kippt koofers odeo, convore woopra klout.",
+        "source-url": "https://dl.acm.org/doi/10.1145/504216.504245",
+        "source-pdf": "https://dl.acm.org/doi/10.1145/504216.504245",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "true"
+      }
+    },
+    {
+      "object-id": "shipman:2002:sh",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "shipman:2002:sh",
+        "author": [
+          "Shipman, III, Frank M.",
+          "Moore, J. Michael",
+          "Maloor, Preetam",
+          "Hsieh, Haowei",
+          "Akkapeddi, Raghu"
+        ],
+        "title": "Semantics Happen: Knowledge Building in Spatial Hypertext",
+        "booktitle": "Proceedings of the Thirteenth ACM Conference on Hypertext and Hypermedia",
+        "publisher": "ACM",
+        "address": "",
+        "pages": "25–34",
+        "year": "2002",
+        "doi": "10.1145/513338.513350",
+        "isbn": "1581134770",
+        "location": "",
+        "keywords": [
+          "spatial hypertext"
+        ],
+        "note": "",
+        "annote": "Hojoki jibjab movity qeyno lijit, flickr ideeli.",
+        "source-url": "https://dl.acm.org/doi/10.1145/513338.513350",
+        "source-pdf": "https://dl.acm.org/doi/pdf/10.1145/513338.513350",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    },
+    {
+      "object-id": "yip:2020:dash",
+      "object-type": "reference data",
+      "bibtex-type": "@inproceedings",
+      "bibtex-data": {
+        "citeKey": "yip:2020:dash",
+        "author": [
+          "Yip, Stanley",
+          "Zeleznik, Bob",
+          "Wilkins, Samuel",
+          "Schicke, Tyler",
+          "van Dam, Andries"
+        ],
+        "title": "Dash: A Hyper Framework",
+        "booktitle": "Proceedings of the 31st ACM Conference on Hypertext and Social Media",
+        "publisher": "Association for Computing Machinery",
+        "address": "New York, NY, USA Virtual Event, USA",
+        "pages": "237–238",
+        "year": "2020",
+        "doi": "10.1145/3372923.3404807",
+        "isbn": "9781450370981",
+        "location": "",
+        "keywords": [
+          "document engineering",
+          "hypertext",
+          "hypermedia",
+          "collaborative editing",
+          "workflow support"
+        ],
+        "note": "",
+        "annote": "Zapier chegg elgg stypi yoono elgg wikia zooomr yuntaa, movity xobni loopt stypi lanyrd foodzie ngmoco.",
+        "source-url": "https://doi.org/10.1145/3372923.3404807",
+        "source-pdf": "https://doi.org/pdf/10.1145/3372923.3404807",
+        "source-html": "",
+        "open-access": "false",
+        "free-acm-access": "false"
+      }
+    }
+  ]
+}
