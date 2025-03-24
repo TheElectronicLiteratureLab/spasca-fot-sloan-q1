@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://fabien.benetou.fr/pub/home/future_of_text_demo/engine/dependencies/webdav.js"></script>
+  </head>
+  <body>
+<button onclick="save()">save</button>
+
+<div id=content></div>
+
+<script>
+// insert screenshots (could probably do the same way, i.e. filereader then webdav upload
+const webdavURL = "https://webdav.benetou.fr";
+const subdirWebDAV = "/fotsave/fot_sloan_companion_public/"
+var webdavClient = window.WebDAV.createClient(webdavURL)
+const hmdURL = "https://hmd.link/?https://companion.benetou.fr"
+
+// const eventSourceConverted = new EventSource( `https://ntfy.benetou.fr/convertedwebdav/sse` )
+// to use for live updates
+
+let positions = []
+let newElements = []
+let originalJSON
+
+function save(){
+	let newContent = {}
+	newContent.configuration = originalJSON.configuration
+	newContent.content = []
+	newElements.map( n => newContent.content.push( originalJSON.content.find( o => o.name == n ) ) )
+	// assuming we always find
+	let uu = originalJSON.content.find( n => n["unassigned-usernames"] )
+	if ( uu ) newContent.content.push( uu )
+	let filename = "demos_saved_"+Date.now()+".json"
+	saveJSONToWebDAV( filename, newContent )
+	let url = webdavURL+subdirWebDAV+filename
+	window.open(url, '_blank')
+}
+
+function saveJSONToWebDAV(filename, content){
+        async function w(path = "/file.txt"){ return await webdavClient.putFileContents(path, JSON.stringify(content)) }
+        written = w(subdirWebDAV+filename)
+}
+
+async function getContent(){
+	let rootEl = document.getElementById("content")
+	const contents = await webdavClient.getDirectoryContents(subdirWebDAV);
+	// consider instead search https://github.com/perry-mitchell/webdav-client#search
+	contents.filter(f => f.basename.endsWith('demo_q1.json'))
+	.map(a => {
+		fetch(a.basename).then( r => r.json() ).then( r => {
+			originalJSON = r
+			r.content.filter( c => c.name ).map( c => {
+				let el = document.createElement("h3")
+				el.innerText = c.name
+				el.draggable="true"
+				el.ondragend = (e) => {
+					// console.log( e.layerY )
+					let name = e.target.innerText
+					newElements = newElements.filter( n => n != name)
+					if ( e.layerY < positions[0].y ) {
+						// console.log( 'before first' )
+						newElements = [name].concat(newElements)
+					}
+					if ( e.layerY > positions.at(-1).y ) {
+						// console.log( 'after last' )
+						newElements.push( name )
+					}
+					positions.map( (p,i) => {
+						let next = positions[i+1]
+						if (next && e.layerY > p.y && e.layerY < next.y){
+							// console.log( name, 'between', p.name, ' & ', next.name)
+							newElements.splice(newElements.indexOf(next.name), 0, name)
+						}
+					})
+					// console.log( newElements )
+					let existing = Array.from( rootEl.children )
+					newElements.map( (el,i) => existing[i].innerText = el )
+						
+				}
+				rootEl.appendChild(el)
+				let pos = el.getBoundingClientRect()
+				positions.push( { name:c.name, y:pos.y+pos.height/2 } )
+				newElements.push( c.name )
+			})
+		})
+	})
+}
+
+getContent()
+</script>
+
+<div id=comments>
+
+<br>
+<br>
+</div>
+
+<h3>
+ideas :
+</h3>
+
+<ul>
+<li>code links, e.g. "code":["https://git.benetou.fr/utopiah/text-code-xr-engine/src/branch/master/index.html#L129", "https://git.benetou.fr/utopiah/text-code-xr-engine/src/branch/master/index.html#L1375-L1408"]
+<li>better integration with viewer (e.g. side by side view)
+<li>in XR mode
+<li>listing of past saved demo queues
+</ul>
+
+<h3>
+done :
+</h3>
+
+<ul>
+<li>save
+<li>linked from viewer
+<li>re-order
+<li>test output https://companion.benetou.fr/demos_saved_1742539103750.json
+</ul>
+
+  </body>
+</html>

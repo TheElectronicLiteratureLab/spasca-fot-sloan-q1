@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://fabien.benetou.fr/pub/home/future_of_text_demo/engine/dependencies/webdav.js"></script>
+  </head>
+  <body>
+
+
+<div id=content></div>
+
+<script>
+// insert screenshots (could probably do the same way, i.e. filereader then webdav upload
+const webdavURL = "https://webdav.benetou.fr";
+const subdirWebDAV = "/fotsave/fot_sloan_companion_public/"
+var webdavClient = window.WebDAV.createClient(webdavURL)
+
+// const eventSourceConverted = new EventSource( `https://ntfy.benetou.fr/convertedwebdav/sse` )
+// to use for live updates
+
+async function getContent(){
+	let rootEl = document.getElementById("content")
+	const contents = await webdavClient.getDirectoryContents(subdirWebDAV);
+	// consider instead search https://github.com/perry-mitchell/webdav-client#search
+	contents.filter(f => f.basename.endsWith('_highlights.json'))
+	.sort( (a,b) => new Date(a.lastmod).getTime() < new Date(b.lastmod).getTime() ) // newest first
+	.map(a => {
+
+		fetch(a.basename).then( r => r.json() ).then( r => {
+			let h2 = document.createElement("h2")
+			h2.innerText = r.source[0]
+			rootEl.appendChild(h2)
+			let h3 = document.createElement("h3")
+			h3.innerText = r.identifier[0]
+			rootEl.appendChild(h3)
+			let ul = document.createElement("ul")
+			rootEl.appendChild(ul)
+
+			r.highlights.map( h => {
+				let li = document.createElement("li")
+				li.innerText = '"' + h.content + '"' + ' (p' + h.page + ')'
+				let span = document.createElement("span")
+				span.innerHTML = "&#9632;"
+				span.style.color = h.ccolor // typo, should be color, not ccolor
+				li.appendChild(span)
+				ul.appendChild(li)
+			})
+
+			let hr = document.createElement("hr")
+			rootEl.appendChild(hr)
+		})
+	})
+}
+
+getContent()
+</script>
+
+<div id=comments>
+
+<br>
+<br>
+</div>
+
+  </body>
+</html>

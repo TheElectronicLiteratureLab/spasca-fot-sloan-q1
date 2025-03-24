@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://fabien.benetou.fr/pub/home/future_of_text_demo/engine/dependencies/webdav.js"></script>
+  </head>
+  <body>
+
+
+<div id=content></div>
+
+<script>
+// insert screenshots (could probably do the same way, i.e. filereader then webdav upload
+const webdavURL = "https://webdav.benetou.fr";
+const subdirWebDAV = "/fotsave/fot_sloan_companion_public/"
+var webdavClient = window.WebDAV.createClient(webdavURL)
+
+// const eventSourceConverted = new EventSource( `https://ntfy.benetou.fr/convertedwebdav/sse` )
+// to use for live updates
+
+async function getContent(){
+	let rootEl = document.getElementById("content")
+	const contents = await webdavClient.getDirectoryContents(subdirWebDAV);
+	// consider instead search https://github.com/perry-mitchell/webdav-client#search
+	contents.filter(f => f.basename.endsWith('.ogg'))
+	.sort( (a,b) => new Date(a.lastmod).getTime() < new Date(b.lastmod).getTime() ) // newest first
+	.map(a => {
+		contents.filter(f => f.basename.endsWith('.jpg') && f.basename.includes("screenshot") )
+		.filter(scsht => (new Date(scsht.lastmod).getTime() < new Date(a.lastmod).getTime() ) &&
+			new Date(scsht.lastmod).getTime() < (new Date(a.lastmod).getTime() + 3600*1000) )
+		.slice(-1)
+		.map(scsht => {
+			let img = document.createElement("img")
+			img.src = scsht.basename
+			img.style.width = "400px"
+			rootEl.appendChild(img)
+			let br = document.createElement("br")
+			rootEl.appendChild(br)
+		})
+		// could also filter by modification time, e.g. only done during the last hour
+			// and/or username, e.g. last hour by username fabien (which prefix filename saving)
+		contents.filter(f => f.basename.endsWith('.srt') && f.basename.includes(a.basename) ).map(srt => {
+			let el = document.createElement("a")
+			el.href = srt.basename
+			rootEl.appendChild(el)
+			el.innerText = srt.basename
+			let hr = document.createElement("br")
+			rootEl.appendChild(hr)
+			let sub = document.createElement("span")
+			rootEl.appendChild(sub)
+			let br = document.createElement("br")
+			rootEl.appendChild(br)
+			fetch( srt.basename ).then( r => r.text() ).then( txt => {
+				sub.innerText = txt.split(/\n\n/g).map(s=>s.split('\n')[2]).join('')
+			})
+		})
+		let el = document.createElement("audio")
+		el.setAttribute("controls","")
+		el.src = a.basename
+		rootEl.appendChild(el)
+		let hr = document.createElement("hr")
+		rootEl.appendChild(hr)
+	})
+}
+
+getContent()
+</script>
+
+<div id=comments>
+webdav check on audio files with matching srt files
+
+show provenance (e.g. when was it recorded and by whom, with XR perspective)
+
+<br>
+Grouping of screenshots and audio is not obvious, could want multiple screenshot for one audio or the other way around. Should though start at first with something simple, e.g. 1-1 potentially based on time, e.g. always screenshot then next recorded audio. Basically looking up modification time and add the last found screenshot per audio. Could also have a cut-out, e.g. only add screenshot done within the last hour maximum, otherwhise no screenshot.
+
+<br>
+
+Consider also highlight frament, e.g. https://companion.benetou.fr/audio_notes_example.html#:~:text=recording even though it seems PROFIND preflight CORS fails on Chromium (where fragments are supported) but works on Firefox (where they are not). So... right now only works on Quest, which is a bit pointless as it's XR.
+</div>
+
+  </body>
+</html>
