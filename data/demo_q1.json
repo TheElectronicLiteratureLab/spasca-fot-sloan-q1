@@ -1,0 +1,38 @@
+{
+	"configuration": {
+		"description":"update the URL sequentially because they are hosted on the same domain",
+		"clarification":"usernames are used as identifiers and thus must be unique, even if leading to no behavior change. Example would q1step4 then q1step5.",
+		"prefixurl":"https://companion.benetou.fr/index.html?username="
+	},
+	"content":[
+			{"name":"Curated demos for Q1", "old_description":"use the left wrist to show commands, look behind and press nextDemo()", 
+"alt":"You have a sphere on your left wrist, touch it to view code snippets",
+"description":"You have a sphere on your left wrist.\n You can tap it to reveal snippets of code with your pointing finger.\n Touching these on the left side allows you to:\n - Move them with your right hand\n - Execute with your left hand\n\nTo go to the next step in the demo, look behind you and tap 'jxr demoNext()' (edited)",
+"screenshot":"demoqueueq1.png", 
+"usernames":["demoqueueq1"] },
+			{"name":"Physical Table in VR (alignment)", "video":"https://youtu.be/A_vH3wRVX_4?t=3336", "description":"move the yellow table from center and release it by your desk height", "screenshot":"tabletest.png", "usernames":["tabletest"]},
+			{"name":"Tap wrist as shortcut", "description":"left wrist to show hide/code snippets","usernames":["q1_step_wrist"] },
+			{"name":"Shortcut binding", "description":"drag and drop onto wrist to make new command\ntry with nextDemo() then tap it to move on", "usernames":["q1_step_shortcutset"] },
+			{"name":"Highlight Text", "video":"https://youtu.be/A_vH3wRVX_4?t=5446", "description": "Puck a line from a PDF to change its coloor.\nThe result becomes available in 2D for yourself and others.\n\nUse the highlighters to freely draw over the document, under its text.\n\nSee https://companion.benetou.fr/highlights_example.html", "screenshot":"q1_step_highlights.png", "usernames":["q1_step_highlights"] },
+			{"name":"References cards", "video":"https://youtu.be/A_vH3wRVX_4?t=6541", "description": "Load a bibliography and manipulate reference as cards.\nSee https://companion.benetou.fr/references_manual_v04.json", "screenshot":"q1_step_refcards.png", "usernames":["q1_step_refcards"] },
+			{"name":"Manuscript stick to closest panels", "description":"Use the right wrist to show commands, show panels,\npick then release the manuscript from its center to drop it on the closest panel.", "usernames":["q1_step_snappanels"] },
+			{"name":"Unfolding Cube", "screenshot":"demo_cube_screenshot.jpg", "description":"Unfold and fold the cube, scale it to room scale\nthen back to the size of your hand to mive.", "screenshot":"refoncubetester.png", "usernames":["refoncubetester"] },
+			{"name":"Screenshot in VR", "description": "Document your process by taking screenshots\nthat become instantly available on the Web for yourself\nand to collaborators.\nSee https://companion.benetou.fr/audio_notes_example.html", "usernames":["q1_step_screenshot"] },
+			{"name":"Audio recording ", "screenshot":"poweruser_screenshot_1739174489566.jpg", "description": "Document the screenshots by talking over them.\nThey also become available to share.\n\nTranscriptions are used to make the documentation searchable.\nSee https://companion.benetou.fr/audio_notes_example.html", "usernames":["q1_step_audio"] },
+			{"name":"Visual Background ", "description":"(non-functional) for grey, room (3D model) and ornaments (animations in background), potential for ambient info as image or semantically integrated widgets",
+				"usernames":[ "backgroundexploration", "backgroundexplorationlowopacity", "backgroundexplorationlowwhitestatic", "backgroundexplorationlowwhite", "backgroundexplorationlowwhitegrids" ]
+			},
+			{"name":"Customization via URL set", "description":"Modify the URL to customize the experience and share that with others, e.g. https://companion.benetou.fr/index.html?set_IDmanuscript_color=lightyellow", "usernames":["q1_step_urlcustom"] },
+			{"name":"Upload Document via desktop", "description":"Using a desktop or laptop, drag and drop an image in the top right corner, see the result live in XR.", "usernames":["q1_step_showfile"] },
+			{"name":"End of currated demos for Q1", "description":"Thank you for testing, please feel free to share idea on how to open this work more.", "usernames":["demoqueueq1end"] },
+			{"unassigned-usernames":[
+				"poweruser",
+				"thicknesstesteruser",
+				"jsonrefmanualtester",
+				"refoncubetester",
+				"cubetester",
+				"metatester10032025 ",
+				"thicknesstesteruser"
+			]}
+	]
+}

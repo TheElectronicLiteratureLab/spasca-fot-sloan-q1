@@ -1,0 +1,2307 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JXR filesystem and mimetype based explorations</title>
+    <script src="https://fabien.benetou.fr/pub/home/future_of_text_demo/engine/dependencies/webdav.js"></script>
+    
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <!-- <script src="https://unpkg.com/aframe-troika-text/dist/aframe-troika-text.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe-troika-text/dist/aframe-troika-text.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/kylebakerio/a-console@1.0.2/a-console.js"></script>
+
+<script>
+let sequentialFiltersInteractionOnPicked = []
+let sequentialFiltersInteractionOnReleased = []
+</script>
+    <script src="interactions/onreleased/color_change.js"></script>
+    <script src="https://fabien.benetou.fr/pub/home/future_of_text_demo/engine/jxr-core_branch_teleport_alt_rot.js?version=cachebusing123455"></script>
+        <!-- modified to include fixed onreleased/ondpicked, should truly be merged on master -->
+    <script src="https://fabien.benetou.fr/pub/home/future_of_text_demo/engine/jxr-postitnote.js"></script>
+        <!-- use to define targets and left/right pinch interactions, respectively execute code and move targets -->
+        <script src="gesture-exploration.js"></script>
+<script>
+let sequentialFilters = []
+</script>
+    <script src="filters/content_filter_examples.js"></script>
+    <script src="filters/screenshot_ui.js"></script>
+    <script src="filters/another_content_filter_example.js"></script>
+    <script src="filters/modifications_via_url.js"></script>
+    <script src="filters/srt_to_json.js"></script>
+    <script src="filters/txt.js"></script>
+    <script src="filters/json_ref_manual.js"></script>
+        <!-- order matters -->
+  </head>
+  <body>
+    
+    <div style="position:fixed;z-index:1; top: 0%; left: 0%; border-bottom: 70px solid transparent; border-left: 70px solid #eee;">
+        <a href="https://git.benetou.fr/utopiah/text-code-xr-engine/issues/">
+                <img style="position:fixed;left:10px;" title="code repository" 
+                     src="https://fabien.benetou.fr/pub/home/future_of_text_demo/engine/gitea_logo.svg">
+        </a>
+
+    </div>
+
+    <!-- <input type="file" id="myFile" name="filename" onchange="updateImage(this)" style="z-index: 1000;position: absolute;"/> -->
+
+<script>
+
+const modifierName = "Shift"
+const modifierColor = new THREE.Color( 'green' )
+const modifierColorRevert = new THREE.Color( 'white' )
+addEventListener("keydown", (event) => {
+	document.getElementById("typinghud").setAttribute("material","opacity", .5)
+	// get reset after a short while
+	if (event.key == modifierName && AFRAME.scenes[0].object3D.getObjectByName("r_handMeshNode") )
+		AFRAME.scenes[0].object3D.getObjectByName("r_handMeshNode").material.color = modifierColor
+})
+
+addEventListener("keyup", (event) => {
+	if (event.key == modifierName && AFRAME.scenes[0].object3D.getObjectByName("r_handMeshNode"))
+		AFRAME.scenes[0].object3D.getObjectByName("r_handMeshNode").material.color = modifierColorRevert
+})
+
+
+/* does not seem to work
+window.addEventListener('popstate', function (event){
+    // executed when user enters new urlquery in browserbar
+    console.log('popstate, should updated urlParams then parametersViaURL(urlParams)')
+	// const urlParams = new URLSearchParams(window.location.search);
+})
+*/
+
+// ---- file upload via WebDAV, notification via ntfy
+let usernamePrefix = ""
+const urlParams = new URLSearchParams(window.location.search);
+const username = urlParams.get('username');
+const sourceFromNextDemo = urlParams.get('sourceFromNextDemo');
+const allowNtfyFeedbackHUD = urlParams.get('allowNtfyFeedbackHUD');
+if (username) {
+	usernamePrefix = username+"_"
+	setTimeout( _ => AFRAME.scenes[0].setAttribute("current-demo-metadata", ''), 1000 )
+}
+
+// https://github.com/binwiederhier/ntfy/blob/main/examples/web-example-eventsource/example-sse.html#L24
+
+const webdavURL = "https://webdav.benetou.fr";
+//const subdirWebDAV = "/fotsave/" // could use /fot_sloan_companion_public/ instead
+const subdirWebDAV = "/fotsave/fot_sloan_companion_public/"
+var webdavClient = window.WebDAV.createClient(webdavURL)
+function dropHandler(ev) {
+
+  console.log("File(s) dropped");
+
+  // Prevent default behavior (Prevent file from being opened)
+  ev.preventDefault();
+
+  if (ev.dataTransfer.items) {
+    // Use DataTransferItemList interface to access the file(s)
+    [...ev.dataTransfer.items].forEach((item, i) => {
+	// TODO seems to only work for 1 file, not multiple files
+      // If dropped items aren't files, reject them
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        console.log(`… file[${i}].name = ${file.name}`);
+	if (file.name == "index.html") {
+		console.warn('can not rewrite over index.html')
+		return
+	}
+
+	  const reader = new FileReader();
+	  reader.onload = (evt) => {
+		fileContent = evt.target.result
+		async function w(path = "/file.txt"){ return await webdavClient.putFileContents(path, fileContent); }
+		written = w(subdirWebDAV+usernamePrefix+file.name)
+		if (written){
+			fetch('https://ntfy.benetou.fr/fileuploadtowebdav', { method: 'POST', body: 'added '+usernamePrefix+file.name })
+		}
+	  };
+	  reader.readAsArrayBuffer(file); 
+	      }
+	    });
+  } else {
+    // Use DataTransfer interface to access the file(s)
+    [...ev.dataTransfer.files].forEach((file, i) => {
+      console.log(`… file[${i}].name = ${file.name}`);
+
+    });
+  }
+}
+
+function dragOverHandler(ev) {
+  console.log("File(s) in drop zone");
+
+  // Prevent default behavior (Prevent file from being opened)
+  ev.preventDefault();
+}
+
+// ------------------------------------------------------------------------------------------------
+
+let currentFilter = null
+
+function applyNextFilter( filename ){
+	if ( currentFilter == null ) currentFilter = -1
+	currentFilter++
+	if ( sequentialFilters[currentFilter] ){
+		sequentialFilters[ currentFilter ]( filename )
+	} else {
+		console.log( "done filtering for", filename )
+		currentFilter = null
+	}
+}
+
+if (allowNtfyFeedbackHUD){
+	const eventSourceConverted = new EventSource( `https://ntfy.benetou.fr/feedbackhud/sse` )
+	eventSourceConverted.onmessage = (e) => { 
+		console.log('converted', event) 
+		setFeedbackHUD(JSON.parse(event.data).message)
+		// inView(targetSelector)
+			// could also parse and share if not relying on inView to help with each step
+	}
+}
+
+// use for content_filter_examples.js
+
+const eventSourceFSWatch = new EventSource( `https://ntfy.benetou.fr/fswatch/sse` )
+// eventSourceFSWatch.onmessage = (e) => { console.log('fswatch', event) }
+// not particularly useful for now
+
+// both events looks very similar so should be refactored and simplified
+
+const eventSourceConverted = new EventSource( `https://ntfy.benetou.fr/convertedwebdav/sse` )
+eventSourceConverted.onmessage = (e) => { 
+	console.log('converted', event) 
+	if (!event.data) return
+	let data = JSON.parse( event.data )
+	if (!data) return
+	let message = JSON.parse( data.message )
+	console.log('checking via /fileswithmetadata again', message)
+	fetch('/fileswithmetadata').then( r => r.json() ).then( r => {
+		  r.map( f => filesWithMetadata[f.name] = f.metadata )
+		  let matchingFiles = r.filter( f => f.name.startsWith(message.source) )
+			.filter( f => f.name.endsWith(message.extension) )
+			.sort( (a,b) => a.metadata.mtimeMs > b.metadata.mtimeMs )
+
+		showFile( matchingFiles[0].name) // could replace number by 0 for PDF
+	})
+}
+
+function toggleShowFile( filename ){
+	let idFromFilename = filename.replaceAll('.','') // has to remove from proper CSS ID
+	let el = document.getElementById( idFromFilename )
+	if (el) {
+		let vis = el.getAttribute("visible") 
+		if (vis == true) 
+			el.setAttribute("visible", false)
+		else
+			el.setAttribute("visible", true)
+	} else {
+		showFile( filename )
+	}
+}
+
+function showFile( filename ){
+	console.log('showFile', filename)
+	fetch( filename ).then( r => {
+		let idFromFilename = filename.replaceAll('.','') // has to remove from proper CSS ID
+		if (!filesWithMetadata[filename] ) filesWithMetadata[filename] = {}
+		filesWithMetadata[filename].contentType = r.headers.get('Content-Type')
+		filesWithMetadata[filename].idFromFilename = idFromFilename
+		console.log( 'ct metadata', filename, filesWithMetadata[filename].contentType )
+
+		applyNextFilter( filename )
+		// should emit an event when done, for now just console.log which isn't programmatic
+	})
+}
+
+const eventSource = new EventSource( `https://ntfy.benetou.fr/fileuploadtowebdav/sse` )
+eventSource.onmessage = (e) => { 
+	console.log(event)
+	if (!event.data) return
+	let data = JSON.parse( event.data )
+	if (!data) return
+	let filename = data.message.replace("added ","")
+	// should actual trigger when server side writting is done, not before otherwise the file is not yet available
+		// could also wait for conversion
+	if (!filename) return
+
+	if (usernamePrefix && !filename.startsWith(usernamePrefix)) return
+
+	setTimeout( _ => {
+		fetch( filename ).then( r => {
+			addIcon( filename, 0, document.getElementById("virtualdesktopplane") )
+			let idFromFilename = filename.replaceAll('.','') // has to remove from proper CSS ID
+
+			if (!r.ok){}
+
+			if (!filesWithMetadata[filename] ) filesWithMetadata[filename] = {}
+			filesWithMetadata[filename].contentType = r.headers.get('Content-Type')
+			filesWithMetadata[filename].idFromFilename = idFromFilename
+			console.log( 'ct metadata', filename, filesWithMetadata[filename].contentType )
+
+			applyNextFilter( filename )
+		})
+	}, 500) // random delay... fine for small files
+
+}
+
+let reader = new FileReader()
+function updateImage(el){
+	console.log(el)
+	reader.readAsDataURL( document.getElementById("myFile").files[0] )
+	reader.addEventListener("load", event => {
+		let el = document.createElement("a-image")
+		AFRAME.scenes[0].appendChild(el)
+		el.setAttribute("position", "0 "+(Math.random()+1)+" -0.5" ) 
+		el.setAttribute("scale", ".1 .1 .1")
+		el.setAttribute("src", reader.result)
+		el.setAttribute("target", "")
+		el.id = "screenshot_"+Date.now()
+	})
+}
+</script>
+
+ <button id="mainbutton" style="display:none; z-index: 1; position: absolute; width:50%; margin: auto; text-align:center; top:45%; left:30%; height:30%;" onclick="startExperience()">Start the experience (hand tracking recommended)</button>
+<script>
+
+/* filtering on files based on all found metadata (200 on .visualmeta.json)
+	based on occurences of keywords (or concepts)
+		most listed (dynamic, e.g most used keywords, sorted, take top 10)
+*/
+
+function loadBook(){
+	fetch('book_chapters.json').then( r => r.json() ).then( r => {
+		test_filteringFromVisualMeta(r)
+	})
+}
+
+// could also rely on https://observablehq.com/@spencermountain/topics-named-entity-recognition rather than delegate keyword/concept generation via API
+
+keywordsCount = {}
+
+AFRAME.registerComponent('gridplace', {
+  init: function () {
+	  // should hide on entering AR
+	const size = 1;
+	const divisions = 10;
+	const gridHelper = new THREE.GridHelper( size, divisions, 0xaaaaaa, 0xaaaaaa );
+	this.el.object3D.add( gridHelper );
+	  let innerRing = [ {x:0,z:1}, {x:1,z:0}, {x:0,z:-1}, {x:-1,z:0} ].map( offset => {
+		const gridHelper = new THREE.GridHelper( size, divisions, 0xcccccc, 0xcccccc );
+		gridHelper.position.x += offset.x
+		gridHelper.position.z += offset.z
+		this.el.object3D.add( gridHelper );
+	  })
+	  let midRing = [ {x:-1,z:1}, {x:1,z:1}, {x:1,z:-1}, {x:-1,z:-1}, 
+			  {x:0,z:2}, {x:2,z:0}, {x:0,z:-2}, {x:-2,z:0} ].map( offset => {
+		const gridHelper = new THREE.GridHelper( size, divisions, 0xdddddd, 0xdddddd );
+		gridHelper.position.x += offset.x
+		gridHelper.position.z += offset.z
+		this.el.object3D.add( gridHelper );
+	  })
+  }
+})
+
+AFRAME.registerComponent('canonical-view', {
+  init: function () {
+	  // try to load default.layout.json and if it exists, use it, as canonical view
+	  let view = 'default.layout.json' // could be a component parameter
+	  fetch(view).then( r => r.text() ).then( r => applyNextFilter(view) )
+  }
+})
+
+let targetLocations = [] 
+	// could have different resulting actions
+		// saveToCompanion() with emailing after
+
+function makeTargetLocationsVisible(){
+	// visualize targetLocations, should only do it once though
+	targetLocations.map( tl => {
+		let el = addNewNote( tl.position, tl.position )
+		let elPlate = document.createElement("a-box")
+		elPlate.setAttribute("position", "0.5 -0.1 0.2" )
+		elPlate.setAttribute("width", "1")
+		elPlate.setAttribute("height", ".01")
+		elPlate.setAttribute("depth", "1")
+		//elPlate.setAttribute("wireframe", "true")
+		setTimeout( _ => el.appendChild( elPlate ), 100 )
+	})
+}
+
+function fileDropped(){
+	targetLocations.map( tl => {
+		let pos = new THREE.Vector3()
+		let el = selectedElements.at(-1).element
+		el.object3D.getWorldPosition( pos )
+		let dist = pos.distanceTo( AFRAME.utils.coordinates.parse( tl.position ) )
+			// does not seem accurate, maybe due to the moving element to have parent
+				// should get world coordinate instead
+		console.log( dist )
+		// simplistic, should instead be using e.g. https://threejs.org/docs/#api/en/math/Box3.containsPoint
+			// allowing for vertical and horizontal trays of different sizes
+		if (dist < tl.distance) {
+			el.setAttribute("color", tl.color)
+			// testing sending to remarkable pro
+			let filename = selectedElements.at(-1).element.filename
+			fetch('/send-remarkablepro/'+filename) // should be configurable too, callback
+			console.log(tl.description, filename) 
+		}
+	})
+}
+
+var filesWithMetadata = {}
+AFRAME.registerComponent('list-files-sorted', {
+  init: function () {
+	  fetch('/fileswithmetadata').then( r => r.json() ).then( r => {
+		  // icon mode
+	          let rootEl = document.getElementById("virtualdesktopplane")
+		  r.map( f => filesWithMetadata[f.name] = f.metadata )
+		  r.sort( (a,b) => a.metadata.mtimeMs < b.metadata.mtimeMs )
+			//.filter( f => ( f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.glb') || f.name.endsWith('.gltf') )) 
+				// inclusive filter
+			.filter( f => ( !f.name.endsWith('.html') && !f.name.endsWith('.js') ) )
+				// exclusive filter
+
+			.filter( f => f.name.startsWith(usernamePrefix) )
+			.filter( f => f.metadata.mtimeMs > Date.now()-(60*60*1000) ) // added during the last hour
+			.map( (text,i) => { 
+				  let el = addIcon( text.name, i, rootEl)
+			  })
+	  })
+  }
+})
+
+AFRAME.registerComponent('list-files', {
+  init: function () {
+	  fetch('/files').then( r => r.json() ).then( r => {
+		  // addNewNoteAsPostItNote( text, position=`-0.2 1.1 -0.1`, scale= "0.1 0.1 0.1", id=null, classes="notes", visible="true", rotation="0 0 0" ){
+
+		  // text only mode
+			  // r.map( (text,i) => addNewNote( text, '-0.4 '+(1.1+i/10)+' -0.4') )
+
+		  // icon mode
+	          let rootEl = document.getElementById("virtualdesktopplane")
+		  r.map( (text,i) => { 
+			  let el = addIcon( text, i, rootEl)
+		  })
+	  })
+  }
+})
+
+let lastExecuted = {}
+function newContentWithRefractoryPeriod(content){
+	if ( Date.now() - lastExecuted['newContentWithRefractoryPeriod'] < 500 ){
+		console.warn('ignoring, executed during the last 500ms already')
+		return
+	}
+	lastExecuted['newContentWithRefractoryPeriod'] = Date.now()
+	// decorator equivalent
+	applyNextFilter(content)
+}
+
+function addIcon(text, i, rootEl){
+	let idFromFilename = text.replaceAll('.','') // has to remove from proper CSS ID
+	const icon_prefix = "icon_"
+	if ( document.getElementById(icon_prefix+idFromFilename) ) return // avoid duplicates (assume either single directory or fullpath)
+	if (text.match(/.*\.pdf-(\d+)\.jpg/)) return // could consider more
+	if (text.match(/swp$|swx$|tmp$|~$|#$|#$/) ) return // cf newContent filtering with .swp and more
+	let el = document.createElement("a-box")
+	let x = Math.round(i/10)/10-(4/2)/10
+	let z = (-i%10)/10+(2/2)/10
+	el.id = icon_prefix+idFromFilename
+	el.filename = text
+	el.setAttribute("position", x+ " " + (1+z) + " 0 ") // vertical layout, leading to broken snapping
+	// el.setAttribute("position", x+ " 0 "+z) // horizontal layout
+	el.setAttribute("target", "")
+	el.setAttribute("value", "jxr applyNextFilter('"+text+"')") // hidden text here, first time, not convinced it's a good idea, not respecting the prinple
+	//el.setAttribute("value", "jxr newContent('"+text+"')") // hidden text here, first time, not convinced it's a good idea, not respecting the prinple
+		// problematic as it can execute multiple times, leading to overlapping yet hidden viewers or content
+		// consider lastExecuted['viewerFullscreen'] equivalent yet without blocking when done programmatically, e.g. when used on load or layout
+
+	// on picked, could resize the bounding box height to .05, onreleased back to .005
+	el.setAttribute("onpicked", "selectedElements.at(-1).element.setAttribute('wireframe', 'false')")
+	el.setAttribute("onreleased", "let el = selectedElements.at(-1).element; el.setAttribute('wireframe', 'true'); el.setAttribute('rotation', '0 0 0'); el.object3D.position.y=0; fileDropped()")
+	// add animations on height and position for children, to become a box proper then flatten back
+		// box
+			// Array.from( document.getElementById('icon_withdefaultjxrstylesjson').children ).map( l => l.getAttribute("position").y -= .02); document.getElementById('icon_withdefaultjxrstylesjson').setAttribute("height", "0.05"); document.getElementById('icon_withdefaultjxrstylesjson').getAttribute("position").y += 0.02
+		// flatten back
+			// Array.from( document.getElementById('icon_withdefaultjxrstylesjson').children ).map( l => l.getAttribute("position").y += .02); document.getElementById('icon_withdefaultjxrstylesjson').setAttribute("height", "0.005"); document.getElementById('icon_withdefaultjxrstylesjson').getAttribute("position").y -= 0.02
+	el.setAttribute("wireframe", "true")
+	el.setAttribute("width", ".05")
+	el.setAttribute("height", ".005")
+	el.setAttribute("depth", ".05")
+	let elPlate = document.createElement("a-box")
+	elPlate.setAttribute("position", "0 0.02 0" )
+	elPlate.setAttribute("width", ".04")
+	elPlate.setAttribute("height", ".04")
+	elPlate.setAttribute("depth", ".001")
+	elPlate.setAttribute("rotation", "-30 0 0" )
+	if (text.includes('.layout.json')) {
+		//elPlate.setAttribute("color", "lightblue" )
+		let elVisibleKnownType = document.createElement("a-troika-text")
+		elVisibleKnownType.setAttribute("position", "-0.002 0.02 0.003" )
+		elVisibleKnownType.setAttribute("value", '{Layout}' )
+		elVisibleKnownType.setAttribute("color", "#000" )
+		elVisibleKnownType.setAttribute("scale", ".04 .04 .04" )
+		el.appendChild(elVisibleKnownType)
+		let el3Delement = document.createElement("a-dodecahedron")
+		el3Delement.setAttribute("wireframe", "true" )
+		el3Delement.setAttribute("position", "0 0.05 0" )
+		el3Delement.setAttribute("color", "#000" )
+		el3Delement.setAttribute("radius", ".01" )
+		el.appendChild(el3Delement)
+	}
+	// color coding based on typed
+	if (!text.includes('.')) elPlate.setAttribute("color", "lightblue" )
+	// heuristic, assuming directories do not have a . is their name
+
+	/* disabled for now
+	let thumbnailUrl = "/thumbnails/"+text+'.png'
+	fetch( thumbnailUrl ).then( r => { if (r.ok) elPlate.setAttribute("src", thumbnailUrl) })
+	// include a visual preview as thumbnail, if available
+	*/
+
+	el.appendChild(elPlate)
+	let elFilename = document.createElement("a-troika-text")
+	elFilename.setAttribute("position", "0 0 0.01" )
+	elFilename.setAttribute("value", text )
+	// alternatively could use text as annotation
+		// elFilename.setAttribute("annotation", "content", name)
+			// rotate -90deg on x
+		// then 'jxr newContent('+filename+')' as value to make it executable on left pinch to open (default function)
+	// could optionally add more metadata e.g. file size, number of pages in documents, etc
+	elFilename.setAttribute("color", "#000" )
+	elFilename.setAttribute("scale", ".04 .04 .04" )
+	// some metadata e.g. file size or number of pages in documents could change depth, thickness
+	el.appendChild(elFilename)
+
+	rootEl.appendChild(el)
+	return el
+}
+
+let checkNewContent
+
+</script>
+    <!-- <canvas width="1000px" height="1000px" id="transparent" style="display:none;"></canvas>--> 
+    <canvas width="100px" height="100px" id="transparent" style="display:none;"></canvas>
+    <!-- low res feels actually nicer --> 
+    <div style="position:fixed;z-index:1; top: 0%; right: 0%; ">
+	<div style="border-style:solid" id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+	  <center> <p>Drag File To Upload.</p> </center>
+	</div>
+	    <a id=imagedownload download='highlight.png' href=''>download highlight (image)</a>
+	    <a id=jsondownload download='highlight.json' href='[]'>download highlight (JSON)</a>
+	    <a onclick="setupRecorder()" href='#recorder'>setup recorder</a>
+	    <a onclick="latestAudioPlay()" href='#playaudio'>play audio</a>
+<br>
+	    <a id=customizedlinkforsharing href='https://hmd.link/?https://companion.benetou.fr/index.html?set_IDenvironment_visible=false&showfile=Apartment.glb'>customization example</a> (that you can then open on HMD on the same WiFi via the hmd.link URL)
+        <!-- could add JS toggle to modifications live then update customizedlinkforsharing.href -->
+
+    </div>
+
+<script>
+document.querySelector('#jsondownload').href=URL.createObjectURL( new Blob([JSON.stringify([])], { type:`text/json` }) ) 
+
+let canvas = document.getElementById("transparent");
+let ctx = canvas.getContext("2d");
+
+AFRAME.registerComponent('raycaster-listen', {
+// could also add the overlay transparent panel in front rather than manually adding it
+   init: function () {
+    // Use events to figure out what raycaster is listening so we don't have to
+    // hardcode the raycaster.
+    this.el.addEventListener('raycaster-intersected', evt => {
+      this.raycaster = evt.detail.el;
+    });
+    this.el.addEventListener('raycaster-intersected-cleared', evt => {
+      this.raycaster = null;
+    });
+    window.highlightToExport = []
+  },
+
+  tick: function () {
+	// return // stopped for demo
+    if (!this.raycaster) { return; }  // Not intersecting.
+
+    let intersection = this.raycaster.components.raycaster.getIntersection(this.el);
+    if (!intersection) { return; }
+    	//console.log(intersection.uv);
+	//   window.highlightToExport.push( intersection.uv )
+	  // this could also be a data structure to export after then be applied back on the source of the image (e.g. PDF)
+	ctx.fillStyle = "#0cc";
+		// should be based on currently / lastly picked highlighter
+	ctx.fillStyle = selectedElements.at(-1).element.querySelector("[raycaster]").getAttribute("raycaster").lineColor 
+	
+	const highres = false // for now actually better in low res
+	let x, y
+	if (!highres){
+		x = intersection.uv.x * 100 // should be also offsetsed by 100- on curved image (?!)
+		y = 100-intersection.uv.y * 100
+		ctx.fillRect(x,y,1,1)
+	} else {
+		x = intersection.uv.x * 1000 // should be also offsetsed by 100- on curved image (?!)
+		y = 1000-intersection.uv.y * 1000
+		ctx.fillRect(x,y,1,10)
+	}
+	/*
+	let x = intersection.uv.x * 100 // should be also offsetsed by 100- on curved image (?!)
+	let y = 100-intersection.uv.y * 100
+	*/
+
+	// will probably cause flickering... consider texture.needsUpdate instead or canvas.toDataURL(), might be faster
+	this.el.setAttribute("src", canvas.toDataURL() )
+	//document.querySelector('#imagedownload').href=document.getElementById('transparent').toDataURL()
+		// skipping for now to test for perf without saving
+	//document.querySelector('[download]').href=document.getElementById('transparent').toDataURL()
+  }
+});
+
+// from https://git.benetou.fr/utopiah/text-code-xr-engine/src/branch/gesture-manager/index.html#L55
+AFRAME.registerComponent('live-selector-line', {
+  schema: {
+	  // unfortunately problematic it here due to ID being based on filenames and thus including '.' in their name
+	  // escaping .replaceAll('.','\.') while setting id also does not work
+	  start: {type: 'selector'},
+	  end: {type: 'selector'},
+  },
+  init: function(){
+	  if (!this.data.start || !this.data.end){
+		  console.warn('start or end selector on live-selector-line not found')
+		  return
+	  }
+	this.newLine = document.createElement("a-entity")
+	this.newLine.setAttribute("line", "start: 0, 0, 0; end: 0 0 0.01; color: red")
+	this.newLine.id = "start_"+this.data.start.id+"_end_"+this.data.end.id
+	AFRAME.scenes[0].appendChild( this.newLine )
+        this.lastStartPos=new THREE.Vector3()
+        this.lastEndPos=new THREE.Vector3()
+  },
+  tick: function(){
+	  if (!this.data.start || !this.data.end){ return }
+	  let startPos = this.data.start.getAttribute("position")
+	  let endPos = this.data.end.getAttribute("position")
+	  if (startPos != this.lastStartPos){
+		this.newLine.setAttribute("line", "start", AFRAME.utils.coordinates.stringify( startPos) )
+		this.lastStartPos = startPos.clone()
+	  }
+	  if (endPos != this.lastEndPos){
+		this.newLine.setAttribute("line", "end", AFRAME.utils.coordinates.stringify( endPos ) )
+		this.lastEndPos = endPos.clone()
+	  }
+  },
+})
+
+function applyJXRStyle(userStyle){
+	userStyle.map( style => {
+		Array.from( document.querySelectorAll(style.selector) ).map( el => el.setAttribute(style.attribute, style.value))
+	})
+}
+
+function parametersViaURL(data){
+	for (const [key, value] of data) {
+		if (key.startsWith("set_")){
+			let [selector, componentName] = key.replaceAll('ID','#').split('_').slice(1)
+			Array.from( document.querySelectorAll(selector) ).map( el => el.setAttribute(componentName, value))
+		}
+		if (key == "showfile"){
+			showFile(value)
+			// seems to fail on Fortress.glb
+			// should be coupled with a filter cf sequentialFilters grew via e.g. <script src="filters/content_filter_examples.js"><...
+				// this would allow for re-usable yet optional modifications, so in practice nearly permanent
+		}
+	}
+
+}
+
+setTimeout( _ => {
+	// color scheme testing, unfortunately can't do CSS "proper"
+		// generalizing selector/attribute pairs though
+		// could be a user provided JSON, ideally CSS though as that's more common
+	const styles = {
+		light : [
+			{selector:'#start_file_sloan_testtxt_end_file_hello_worldtxt', attribute:'line', value: 'color:blue'},
+			{selector:'a-sky', attribute:'color', value: 'gray'},
+			{selector:'.notes', attribute:'color', value: 'black'},
+			{selector:'.notes', attribute:'outline-color', value: 'white'},
+			{selector:'a-troika-text a-plane', attribute:'color', value: 'red'},
+			{selector:'a-troika-text a-triangle', attribute:'color', value: 'darkred'}
+		],
+		print : [
+			{selector:'#start_file_sloan_testtxt_end_file_hello_worldtxt', attribute:'line', value: 'color:brown'},
+			{selector:'a-sky', attribute:'color', value: '#EEE'},
+			{selector:'.notes', attribute:'color', value: 'black'},
+			{selector:'.notes', attribute:'outline-color', value: 'white'},
+			{selector:'a-troika-text a-plane', attribute:'color', value: 'lightyellow'},
+			{selector:'a-troika-text a-triangle', attribute:'color', value: 'orange'}
+		],
+	}
+
+	parametersViaURL(urlParams)
+
+	makeTargetLocationsVisible()
+
+	wristShortcut = "jxr toggleHideAllJXRCommands()"
+
+	document.getElementById("typinghud").setAttribute("material","opacity", .01)
+	// could also gradually hide away, or show only after typing
+
+	hideAllJXRCommands()
+	// overrides user-visibility component due to the delay
+
+	/* exploration on highlighting by color within text
+
+	let startColor = Math.floor(Math.random()*100)
+	let endColor = Math.floor(startColor + Math.random()*100)
+	let range = {}
+	range[0] = 0xffffff
+	range[startColor] = 0x0099ff
+	range[endColor] = 0xffffff
+	hightlightabletext.setAttribute("troika-text", {colorRanges: range})
+	// should map from the highlight result of the raycaster, only when it hits
+		// could try to rely on https://github.com/protectwise/troika/blob/main/packages/troika-three-text/src/selectionUtils.js
+
+	// could start indirect, with sliders to 
+		// grow/shrink a selection
+		// move it's starting position
+	*/
+
+	if (username && username == "thicknesstesteruser") {
+		thicknesscommands.setAttribute("visible", true)
+		Array.from( thicknesscommands.children ).map( c => c.setAttribute("visible", true) )
+	}
+
+	if (username && username == "tabletest") {
+		setTimeout( _ => { // example of conditional hint
+			if ( selectedElements.filter( el => el.element.id == "virtualdesktopplanemovable" && el.primary ).length < 1 )
+				setFeedbackHUD('pinch from the center of the yellow element')
+		}, 30*1000 )
+		manuscript.setAttribute("visible", false)
+		virtualdesktopplanemovable.setAttribute("visible", "true")
+		virtualdesktopplanemovable.setAttribute("onpicked", "selectedElements.at(-1).element.setAttribute('wireframe', 'true')")
+		virtualdesktopplanemovable.setAttribute("onreleased", "let el = selectedElements.at(-1).element; el.setAttribute('wireframe', 'false'); el.setAttribute('rotation', '0 0 0'); ")
+	}
+
+	if (username && username == "jsonrefmanualtester") {
+		console.clear()
+	}
+
+	if (username && username == "refoncubetester") {
+		console.clear()
+		showFile("references_manual_v04.json")
+		setTimeout( _ => { roundedpageborders.setAttribute("visible", "false") }, 1000 )
+		let cube = addCubeWithAnimations()
+		cube.setAttribute("target", "")
+		// should reparent 1st 6 cards to faces
+		setTimeout( _ => { 
+			let refs = Array.from( document.querySelectorAll(".reference-entry") ) 
+			// refs.map( r => { r.parentElement = cube // doesn't seem to have any impact })
+
+			refs.map( (r,i) =>  {
+				r.object3D.parent = cubetest.object3D;
+				r.object3D.translateZ(.5);
+				r.object3D.translateY(-1);
+				r.object3D.scale.setScalar(.01)
+			} )
+			// should offset them down too
+			Array.from( document.querySelectorAll(".reference-entry-card") ).map( el => el.setAttribute("visible", "false"))
+		 }, 500 )
+		let testingCommands = ["unfoldCube()", "roomScaleCube()", "palmScaleCube()", "refoldCube()"]
+		testingCommands.map( (c,i) => addNewNote("jxr " + c, "0.5 "+(1+i/10)+" -1" ) )
+	}
+
+	if (username && username == "cubetester") {
+		addCubeWithAnimations()
+		console.clear()
+	}
+
+	if (username && username == "metatester13032025") {
+		AFRAME.scenes[0].setAttribute("timed-demos", "")
+	}
+
+	if (username && username == "metatester10032025") {
+		// see demoqueueq1 user instead and related q1_* users
+			// could consider grouping if same prefix
+		console.clear()
+		const prefixUrl = "?username="
+		const optionUsers = ["refoncubetester", "backgroundexplorationlowopacity", "backgroundexplorationlowwhite", "backgroundexplorationlowwhitegrids", "backgroundexplorationlowwhitestatic"]
+		optionUsers.map( (c,i) => addNewNote("jxr location.assign('index.html?username=" + c + "')", "0.5 "+(1+i/10)+" -1" ) )
+		// somehow ? doesn't get escaped
+			// see timed-demos component instead
+	}
+	if (username && username == "instructionsonhands") {
+		AFRAME.scenes[0].setAttribute("instructions-on-hands", "")
+	}
+
+	if (username && username == "poweruser") {
+		// could instead use a per user limited visibility e.g. rely on AFRAME.registerComponent('user-visibility') untested for now
+
+		toggleHideAllJXRCommands()
+		// --- to demo :
+		// startViewCheck()
+		// showHighlight() // older version without images
+		//addImagesViaXML()
+
+		window.pageastextviaxmlsrc = "https://companion.benetou.fr/saved/pdfxml/3209542.3209570.xml"
+		//window.pageastextviaxmlsrc = "https://companion.benetou.fr/augmented_paper_xml/augmented_paper.xml"
+		// to try with another one...
+		pageAsTextViaXML()
+		//pageAsTextViaXML(5)
+		highlightcommands.setAttribute("visible", true)
+		roundedpageborders.setAttribute("visible", true)
+
+		//recordercommands.setAttribute("visible", true)
+		//addRecentAudioFiles()
+		// recordings to try the binding to annotation
+		// should check if dropped nearby colored annotations 
+		/*
+		setTimeout( _ => {
+			Array.from( document.querySelectorAll(".highlightabletext") )[0].setAttribute("color", "aqua") 
+			Array.from( document.querySelectorAll(".audiorecordings") ).map( el => {
+				el.setAttribute("onreleased", "associateLatestDropRecordingClosestHighlight()")
+			})
+		}, 2000 )
+		*/
+		// to test
+
+		// ----------------------------------------- gesture vertical hand  -------------------------------------------
+
+		/*
+		let myScene = AFRAME.scenes[0].object3D 
+		setInterval( i => {
+                	if ( myScene.getObjectByName("r_handMeshNode") && myScene.getObjectByName("r_handMeshNode").parent.getObjectByName("wrist").rotation._y > -0.1
+                		&& myScene.getObjectByName("r_handMeshNode").parent.getObjectByName("wrist").rotation._y < 0.1)
+				console.log('right hand about straight up')
+				// could try to use this with a minimum amplitude and above threshold, e.g. > .3m under 1s, trigger action
+			// should find better visualization, e.g. position as color curve? rotation as oriented sphere?
+		}, 500 )
+		*/
+
+	}
+
+	// ----------------------------------------- demo queue Q1 customizations -------------------------------------------
+
+	if (username && username == "demoqueueq1") {
+		instructions.setAttribute("visible", false)
+		// could be use with timer on selectedElements which already includes timestamps and primary/secondary
+			// selectedElements.filter( a => a.primary ).length
+			// selectedElements.filter( a => a.secondary ).length
+				// could use timestamp to show if after 30s either is still 0
+			// consider also setFeedbackHUD('hi')
+		manuscript.setAttribute("visible", false)
+		basiccommands.setAttribute("visible", false)
+		middlecommands.setAttribute("visible", false)
+		topsidecommands.setAttribute("visible", false)
+		document.querySelector("a-console").setAttribute("visible", false)
+		AFRAME.scenes[0].setAttribute("instructions-on-hands", "")
+		// not throroughly tested
+	}
+
+	if (username && username == "q1_step_urlcustom") {
+		const testUrlParams = new URLSearchParams( "set_IDmanuscript_color=lightyellow" )
+		parametersViaURL(testUrlParams)
+	}
+
+	if (username && username == "q1_step_refcards") {
+		manuscript.setAttribute("visible", false)
+		showFile("references_manual_v04.json")
+		setTimeout( _ => { roundedpageborders.setAttribute("visible", "false") }, 1000 )
+		let cube = addCubeWithAnimations()
+		cube.setAttribute("target", "")
+		cube.setAttribute("visible", "false")
+		setTimeout( _ => {
+			demoMetaDataName.object3D.translateX(-.9) 
+			demoMetaDataDescription.object3D.translateX(-.9)
+		}, 1000)
+
+	}
+
+	if (username && username == "q1_step_showfile") {
+		const testUrlParams = new URLSearchParams( "showfile=175235.175237.pdf-0.jpg" )
+		parametersViaURL(testUrlParams)
+	}
+
+	if (username && username == "q1_step_highlights") {
+		window.pageastextviaxmlsrc = "https://companion.benetou.fr/saved/pdfxml/3209542.3209570.xml"
+		//window.pageastextviaxmlsrc = "https://companion.benetou.fr/augmented_paper_xml/augmented_paper.xml"
+		// to try with another one...
+		pageAsTextViaXML()
+		//pageAsTextViaXML(5)
+		highlightcommands.setAttribute("visible", true)
+		roundedpageborders.setAttribute("visible", true)
+		highlighterA.setAttribute("visible", true)
+		highlighterB.setAttribute("visible", true)
+		// eraser as black cube, same principle as highlighters
+		// move title/desc to the side
+
+		setTimeout( _ => {
+			demoMetaDataName.object3D.translateX(-.7) 
+			demoMetaDataDescription.object3D.translateX(-.7)
+		}, 1000)
+	}
+
+	if (username && username == "q1_step_audio") {
+		recordercommands.setAttribute("visible", true)
+		addRecentAudioFiles()
+		// recordings to try the binding to annotation
+		// should check if dropped nearby colored annotations 
+	}
+
+	if (username && username == "q1_step_screenshot") {
+		middlecommands.setAttribute("visible", false)
+		basiccommands.setAttribute("visible", false)
+		topsidecommands.setAttribute("visible", false)
+		let testingCommands = ["toggleShowCube()", 'setTimeout( _ => saveScreenshot("screenshot_"+Date.now()+".jpg") , 1000 )' ]
+		testingCommands.map( (c,i) => addNewNote("jxr " + c, "-0.5 "+(1+i/10)+" -.55" ) )
+		//recordercommands.setAttribute("visible", true)
+		//addRecentAudioFiles()
+		// recordings to try the binding to annotation
+		// should check if dropped nearby colored annotations 
+		window.pageastextviaxmlsrc = "https://companion.benetou.fr/saved/pdfxml/3209542.3209570.xml"
+		//window.pageastextviaxmlsrc = "https://companion.benetou.fr/augmented_paper_xml/augmented_paper.xml"
+		// to try with another one...
+		pageAsTextViaXML()
+		//pageAsTextViaXML(5)
+		highlightcommands.setAttribute("visible", true)
+		roundedpageborders.setAttribute("visible", true)
+		highlighterA.setAttribute("visible", true)
+		highlighterB.setAttribute("visible", true)
+		// eraser as black cube, same principle as highlighters
+		// move title/desc to the side
+
+		setTimeout( _ => {
+			demoMetaDataName.object3D.translateX(-.7) 
+			demoMetaDataDescription.object3D.translateX(-.7)
+		}, 2000)
+	}
+
+
+	// ----------------------------------------- constrained move -------------------------------------------
+	/*
+	virtualdesktopplanemovableblue.setAttribute("onpicked", "constraintsMoveSingleAxis(selectedElements.at(-1).element, 'x')")
+	virtualdesktopplanemovableblue.setAttribute("onreleased", "clearConstraintsMoveSingleAxis('x')")
+
+	virtualdesktopplanemovablegreen.setAttribute("onpicked", "constraintsMoveSingleAxis(selectedElements.at(-1).element, 'y')")
+	virtualdesktopplanemovablegreen.setAttribute("onreleased", "clearConstraintsMoveSingleAxis('y')")
+
+	virtualdesktopplanemovablered.setAttribute("onpicked", "constraintsMoveNoRotation(selectedElements.at(-1).element)")
+	virtualdesktopplanemovablered.setAttribute("onreleased", "clearConstraintsMoveNoRotation()")
+
+
+	const axesHelper = new THREE.AxesHelper(.1)
+	const colorGreen = new THREE.Color( 'green' )
+	const colorRed = new THREE.Color( 'red' )
+	const colorBlue = new THREE.Color( 'blue' )
+	const colorGray = new THREE.Color( 'gray' )
+	axesHelper.setColors(colorGreen, colorGray, colorGray)
+	cylinderorange.object3D.add( axesHelper )
+		// object related, should be axis bound
+	cylinderorange.setAttribute("onpicked", "constraintsTranslateX(selectedElements.at(-1).element)")
+	cylinderorange.setAttribute("onreleased", "clearConstraintsTranslateX()")
+
+	// rotation edit widget : donut + cone as arrow (interactable)
+	let helperDonut = document.createElement("a-torus")
+	helperDonut.setAttribute("radius", ".02")
+	helperDonut.setAttribute("rotation", "0 90 0")
+	helperDonut.setAttribute("radius-tubular", ".001")
+	helperDonut.setAttribute("segments-height", 8)
+	helperDonut.setAttribute("segments-width", 8)
+	helperDonut.setAttribute("opacity", .3)
+	cylinderpurple.appendChild(helperDonut)
+
+	let helperCone = document.createElement("a-cone")
+	helperCone.setAttribute("opacity", .3)
+	helperCone.setAttribute("rotation", "0 90 0")
+	helperCone.setAttribute("position", "0 0 .02")
+	helperCone.setAttribute("height", ".001")
+	helperCone.setAttribute("radius-top", ".001")
+	helperCone.setAttribute("radius-bottom", ".005")
+	helperCone.setAttribute("segments-height", 8)
+	helperCone.setAttribute("segments-width", 8)
+	cylinderpurple.appendChild(helperCone)
+	helperCone.setAttribute("target", "") // works via the console... but while in XR the target for direct rotation (on object) and this are too close
+		// could try apply on last/next picked item instead
+	helperCone.id = "cylinderpurplecone"
+
+	cylinderpurplecone.setAttribute("onpicked", "constraintsRotationX(selectedElements.at(-1).element)")
+	//cylinderpurplecone.setAttribute("onreleased", "clearConstraintsMoveNoRotation()")
+	// cylinderpurple.object3D.rotateX(.1)
+		// because direct rotation works (with target component) this is about constrained rotation
+			// e.g. snapping at 90deg angles
+
+	// onreleased could also be added from within onpicked... not necessarily clearer though
+
+	*/
+}, 500)
+
+AFRAME.registerComponent('user-visibility', {
+  schema: { username: {type: 'string'}, },
+  init: function(){
+	if (!this.data.username){ console.warn('username required'); return }
+	if (username && username == this.data.username){
+		this.el.setAttribute("visible", true)
+	} else {
+		this.el.setAttribute("visible", false)
+	}
+  }
+})
+
+function addImagesViaXML(src = "https://companion.benetou.fr/augmented_paper_xml/augmented_paper.xml"){
+	fetch( src ).then( r => r.text() ).then( txt => {
+	  const parser = new DOMParser();
+	  const doc = parser.parseFromString(txt, "application/xml");
+	  Array.from( doc.querySelectorAll("image") ).map( i => showFile('/augmented_paper_xml/'+i.attributes.src.value)); 
+	  setTimeout( _ => {
+	      Array.from( doc.querySelectorAll("image") ).map( i => { 
+		let el = document.getElementById('/augmented_paper_xml/'+i.attributes.src.value.replace('.','')); 
+		el.setAttribute("width", i.attributes.width.value/1000); 
+		el.setAttribute("height", i.attributes.height.value/1000); 
+		el.setAttribute("position", ""+ i.attributes.left.value/1000+" "+ (i.attributes.top.value/1000+1)+ " "+(Math.random()/1000-.5)); 
+		})
+	  }, 1000)
+	})
+}
+
+function pageAsTextViaXML(page=0){
+	let src = window.pageastextviaxmlsrc 
+	fetch( src ).then( r => r.text() ).then( txt => {
+	  Array.from( roundedpageborders.querySelectorAll(".highlightimagefromxmlitem,.highlightabletext") ).map( e => e.remove() )
+	  targets = targets.filter( el => !el.classList.contains("highlightabletext"))
+		// assumes single document open this way
+			// probably safer performance-wise, otherwise rely on (high quality) image instead, no interaction needed
+	  const parser = new DOMParser();
+	  let doc = parser.parseFromString(txt, "application/xml")
+	  const scalingFactor = 1/1000 // used for position of text and images
+		// could also use x/y/z offsets
+			// probably easier to append to an entity, either empty or used as (white) background
+	  const xOffset = 0
+	  const yOffset = 1
+	  const zPos = -.5
+		// see also roundedpageborders
+	  //Array.from( doc.children[0].children[page].querySelectorAll("text") ).map( (l,n) => addNewNote(l.textContent, ""+(l.attributes.left.value*scalingFactor+xOffset) + " " + (1-l.attributes.top.value*scalingFactor+yOffset) + " "+zPos, "0.045 0.045 0.045", "highlighttextfromxml_"+n, "highlighttextfromxmlitem" ) )
+	  Array.from( doc.children[0].children[page].querySelectorAll("text") ).map( (l,n) => {
+		//	addNewNote(l.textContent, ""+(l.attributes.left.value*scalingFactor+xOffset) + " " + (1-l.attributes.top.value*scalingFactor+yOffset) + " "+zPos, "0.045 0.045 0.045", "highlighttextfromxml_"+n, "highlighttextfromxmlitem" ) )
+			let tktxt = document.createElement("a-troika-text")
+			let pos = ""+(l.attributes.left.value*scalingFactor+xOffset) + " " + (1-l.attributes.top.value*scalingFactor+yOffset) + " "+zPos
+			let scale = "0.045 0.045 0.045" 
+			tktxt.setAttribute("position", pos)
+			tktxt.setAttribute("originalposition", pos)
+			tktxt.setAttribute("originalpage", page)
+			// FIXME 
+			//tktxt.setAttribute("originalsource", fileContent.meta.metadata['dc:title'])
+			//tktxt.setAttribute("originalidentifier", fileContent.meta.metadata['dc:identifier'])
+			tktxt.setAttribute("font-size", "0.009")
+			tktxt.setAttribute("color", "black")
+			tktxt.setAttribute("target", "")
+			tktxt.classList.add("highlightabletext")
+			tktxt.setAttribute("onpicked", "console.log(selectedElements.at(-1).element.getAttribute('value'))")
+			tktxt.setAttribute("onreleased", "let el = selectedElements.at(-1).element; if (true) el.setAttribute('color', highlightColor); el.setAttribute('rotation', ''); el.setAttribute('position', el.getAttribute('originalposition') )")
+				// resets back...
+				// change color
+					// only if above a certain threshold, e.g. held a long time, or released close to specific other item
+				// could also toggle coloring
+					// can be based on coloring pick with jxr
+			tktxt.setAttribute("value", l.textContent)
+			tktxt.setAttribute("anchor", "left")
+			roundedpageborders.appendChild(tktxt)
+	  })
+
+	  Array.from( doc.children[0].children[page].querySelectorAll("image") ).map( (l,n) => {
+		let el = document.createElement("a-box")
+		// is position via center of element so should offset it
+		el.setAttribute("src", "/augmented_paper_xml/"+l.attributes.src.value);  // somehow set to #transparent... 
+		el.setAttribute("width", l.attributes.width.value*scalingFactor); 
+		el.setAttribute("height", l.attributes.height.value*scalingFactor); 
+		el.setAttribute("depth", .01); 
+		el.setAttribute("target", "")
+		el.id = "highlightimagefromxml_"+n
+		el.classList.add("highlightimagefromxmlitem")
+		el.classList.add("highlightabletext")
+		let w = l.attributes.width.value*scalingFactor
+		let h = l.attributes.height.value*scalingFactor
+		el.setAttribute("position", ""+ ""+(w/2+l.attributes.left.value*scalingFactor+xOffset)+" "+ (-h/2+1-l.attributes.top.value*scalingFactor+yOffset)+ " "+zPos)
+		roundedpageborders.appendChild(el)
+	   })
+	} ); 
+}
+
+function previousPageForXMLText(){
+	if (pageNumberShownForHighlight>0)
+		changePageForXMLText(--pageNumberShownForHighlight)
+	return pageNumberShownForHighlight
+}
+
+function nextPageForXMLText(){
+	//if (pageNumberShownForHighlight<contentFromDocumentAsJSON.pages.length-1) changePageXMLText(++pageNumberShownForHighlight)
+	// needs the doc parsed
+	if (pageNumberShownForHighlight<11) changePageForXMLText(++pageNumberShownForHighlight) // hard coded and wrong...
+	return pageNumberShownForHighlight
+}
+
+function changePageForXMLText(pageNumber){
+	Array.from( document.querySelectorAll(".highlightabletext") ).map(el => el.remove())
+	// expected to be saved first by the user
+		// could be stored first using getHighlights() first, safer
+	highlightsBetweenPageChanges.push( getHighlights() )
+	pageAsTextViaXML(pageNumber)
+}
+
+let contentFromDocumentAsJSON
+let pageNumberShownForHighlight = 0
+function showHighlight(){
+	const originalDoc = "augmented_paper.pdf"
+	const contentJSON = originalDoc+".json"
+	const renderedFirstPage = originalDoc+"-0.jpg"
+	fetch(contentJSON).then( r => r.json() ).then( fileContent => {
+
+		let pageBackground = document.createElement("a-box")
+		pageBackground.id = 'pagebackground'
+		pageBackground.setAttribute("position", "0.1 1.7 -0.51")
+		pageBackground.setAttribute("scale", ".0011 .0011 .001")
+		pageBackground.setAttribute("width", "612")
+		pageBackground.setAttribute("height", "792")
+		AFRAME.scenes[0].appendChild(pageBackground)
+
+		contentFromDocumentAsJSON = fileContent
+		showPageForHighlight(fileContent, pageNumberShownForHighlight)
+	})
+	showFile(renderedFirstPage)
+	// adapting ratio based on page width/height
+	setTimeout( _ => {
+		let renderedFirstPageEl = document.getElementById( renderedFirstPage.replaceAll('.',''))
+		renderedFirstPageEl.setAttribute("scale", 612/792+" 1 0.1") // hard coded based on data from parsed JSON from PDFExtract
+	}, 200)
+}
+
+function previousPageForHighlight(){
+	if (pageNumberShownForHighlight>0)
+		changePageForHighlight(--pageNumberShownForHighlight)
+	return pageNumberShownForHighlight
+}
+
+function nextPageForHighlight(){
+	if (pageNumberShownForHighlight<contentFromDocumentAsJSON.pages.length-1)
+		changePageForHighlight(++pageNumberShownForHighlight)
+	return pageNumberShownForHighlight
+}
+
+let highlightsBetweenPageChanges = []
+function changePageForHighlight(pageNumber){
+	Array.from( document.querySelectorAll(".highlightabletext") ).map(el => el.remove())
+	// expected to be saved first by the user
+		// could be stored first using getHighlights() first, safer
+	highlightsBetweenPageChanges.push( getHighlights() )
+	showPageForHighlight(contentFromDocumentAsJSON, pageNumber)
+}
+
+function showPageForHighlight(fileContent, pageNumber){
+		// example of direct layout but with incorrect fonts
+		const scale = 1/1000
+		const xOffset = -.2
+		const yOffset = 2.1
+		//let pageNumber = 0
+		fileContent.pages[pageNumber].content.map( str => {
+			let tktxt = document.createElement("a-troika-text")
+			tktxt.setAttribute("position", ""+(xOffset+str.x*scale) + " " + (yOffset-str.y*scale) + " -0.5")
+			tktxt.setAttribute("originalposition", ""+(xOffset+str.x*scale) + " " + (yOffset-str.y*scale) + " -0.5")
+			tktxt.setAttribute("originalpage", pageNumber)
+			tktxt.setAttribute("originalsource", fileContent.meta.metadata['dc:title'])
+			tktxt.setAttribute("originalidentifier", fileContent.meta.metadata['dc:identifier'])
+			tktxt.setAttribute("font-size", "0.005")
+			tktxt.setAttribute("color", "black")
+			tktxt.setAttribute("target", "")
+			tktxt.classList.add("highlightabletext")
+			tktxt.setAttribute("onpicked", "console.log(selectedElements.at(-1).element.getAttribute('value'))")
+			tktxt.setAttribute("onreleased", "let el = selectedElements.at(-1).element; if (true) el.setAttribute('color', highlightColor); el.setAttribute('rotation', ''); el.setAttribute('position', el.getAttribute('originalposition') )")
+				// resets back...
+				// change color
+					// only if above a certain threshold, e.g. held a long time, or released close to specific other item
+				// could also toggle coloring
+					// can be based on coloring pick with jxr
+			tktxt.setAttribute("value", str.str)
+			tktxt.setAttribute("anchor", "left")
+			AFRAME.scenes[0].appendChild(tktxt)
+			// somehow looks more demanding than own addNewNote based on it...
+
+			// can then process for all str that is NOT the default color, i.e. black
+				// ".highlightabletext"
+				// then become exportable JSON
+		})
+
+}
+
+function nonBlackHighlitableTexts(){
+	return Array.from( document.querySelectorAll(".highlightabletext") ).filter( el => el.getAttribute("color") != "black" )
+}
+
+function getHighlights(){
+	let data = {}
+	let foundHighlights = nonBlackHighlitableTexts()
+	
+	data.source = foundHighlights.map( el => el.getAttribute("originalsource")).slice(-1) // assuming single source for now!
+	data.identifier = foundHighlights.map( el => el.getAttribute("originalidentifier")).slice(-1) // assuming single source for now!
+	data.highlights = foundHighlights.map( el => { return {page: el.getAttribute("originalpage"), color: el.getAttribute("color"), content: el.getAttribute("value")}})
+
+	return data
+}
+
+let highlightColor = 'aqua'
+
+function constraintsRotationX(el){
+	el.object3D.rotateX(.1)
+}
+
+// relative translation, using translateX/Y/Z
+// amount based on distance between current position and starting position
+// becomes tricky due to on-going rotation...  so using ghost object 
+function constraintsTranslateX(el){
+	window.cmv_value = new THREE.Vector3()
+	el.object3D.getWorldPosition( window.cmv_value ) // goes back to initial position, not new one after being picked...
+	window.cmv_el_original = el
+	window.cmv_el_clone = el.cloneNode(true) // can not override the hand picking pose use a "ghost" object
+	window.cmv_el_clone.setAttribute("opacity", .3)
+	// arguably this can be swapped, namely the opacity of the original could be lower and the clone higher, then swap on release
+	window.cmv_el_clone.classList.add("ghost_element")
+	AFRAME.scenes[0].appendChild(window.cmv_el_clone)
+	window.cmv = setInterval( _ => {
+		window.cmv_el_clone.object3D.translateX( window.cmv_el_original.object3D.position.distanceTo( window.cmv_value )/100 )
+			// might try sqrt() or log() to avoid going away too fast
+		// quite wonky... safer to keep the initial rotation
+	},10) 
+}
+
+function clearConstraintsTranslateX(){
+	clearInterval( window.cmv )
+	window.cmv_el_original.object3D.position.copy(cmv_el_clone.object3D.position)
+	window.cmv_el_original.object3D.rotation.copy(cmv_el_clone.object3D.rotation)
+	Array.from( document.querySelectorAll('.ghost_element')).map( el => el.remove())
+}
+
+function constraintsMoveSingleAxis(el, axis){
+	// could visually add a colored helper arrow on the axis
+		// ArrowHelper, GridHelper, AxesHelper, PlaneHelper
+	window.cmv_value = AFRAME.utils.coordinates.stringify( el.getAttribute("rotation") )
+	window.cmv_el_original = el
+	window.cmv_el_clone = el.cloneNode(true) // can not override the hand picking pose use a "ghost" object
+	window.cmv_el_clone.setAttribute("opacity", .3)
+	// arguably this can be swapped, namely the opacity of the original could be lower and the clone higher, then swap on release
+	window.cmv_el_clone.classList.add("ghost_element")
+	AFRAME.scenes[0].appendChild(window.cmv_el_clone)
+	window.cmv = setInterval( _ => {
+		window.cmv_el_clone.object3D.position[axis] = window.cmv_el_original.object3D.position[axis]
+		window.cmv_el_clone.object3D.rotation.copy(cmv_el_original.object3D.rotation)
+		// could also be axis locked by only copying the x/y/z value of position
+	},10) 
+}
+
+function clearConstraintsMoveSingleAxis(axis){
+	clearInterval( window.cmv )
+	if (axis!="x") window.cmv_el_original.object3D.position.x = window.cmv_el_clone.object3D.position.x
+	if (axis!="y") window.cmv_el_original.object3D.position.y = window.cmv_el_clone.object3D.position.y
+	if (axis!="z") window.cmv_el_original.object3D.position.z = window.cmv_el_clone.object3D.position.z 
+	Array.from( document.querySelectorAll('.ghost_element')).map( el => el.remove())
+}
+
+function constraintsMoveNoRotation(el){
+	window.cmv_value = AFRAME.utils.coordinates.stringify( el.getAttribute("rotation") )
+	window.cmv_el_original = el
+	window.cmv_el_clone = el.cloneNode(true) // can not override the hand picking pose use a "ghost" object
+	window.cmv_el_clone.setAttribute("opacity", .3)
+	// arguably this can be swapped, namely the opacity of the original could be lower and the clone higher, then swap on release
+	window.cmv_el_clone.classList.add("ghost_element")
+	AFRAME.scenes[0].appendChild(window.cmv_el_clone)
+	window.cmv = setInterval( _ => {
+		window.cmv_el_clone.setAttribute("position", AFRAME.utils.coordinates.stringify( window.cmv_el_original.getAttribute("position") ) )
+		// could also be axis locked by only copying the x/y/z value of position
+	},10) 
+}
+
+function clearConstraintsMoveNoRotation(){
+	clearInterval( window.cmv )
+	Array.from( document.querySelectorAll('.ghost_element')).map( el => el.remove())
+	window.cmv_el_original.setAttribute("rotation", window.cmv_value)
+}
+
+function toggleHideAllJXRCommands(){
+	let jxrCommands = Array.from( document.querySelectorAll("a-troika-text") ).filter( c => c.getAttribute("value").startsWith("jxr"))
+	if (!jxrCommands) return 
+	let visible = jxrCommands[0].getAttribute("visible")
+	hideAllJXRCommands(!visible)
+}
+
+function hideAllJXRCommands(visible="false"){
+	Array.from( document.querySelectorAll("a-troika-text") ).filter( c => c.getAttribute("value").startsWith("jxr")).map( c => c.setAttribute("visible", visible))
+}
+
+function bumpSelection(invert = false){
+	let newStart = Number(Object.entries( hightlightabletext.getAttribute("troika-text").colorRanges )[1][0])+1
+	if (invert) newStart-=2
+	if (newStart<0) newStart = 0
+	let lengthString = hightlightabletext.getAttribute("troika-text").value.length
+	if (newStart>lengthString) newStart = lengthString-1
+	
+	let end = Number(Object.entries( hightlightabletext.getAttribute("troika-text").colorRanges )[2][0])
+		// can fail by simplifying to 2 value instead of 3 when arriving at 0
+	let range = {}
+	range[0] = 0xffffff
+	range[newStart] = 0x0099ff
+	range[end] = 0xffffff
+	hightlightabletext.setAttribute("troika-text", {colorRanges: range})
+}
+
+function growSelection(invert = false){
+	let start = Number(Object.entries( hightlightabletext.getAttribute("troika-text").colorRanges )[1][0])
+
+	let newEnd = Number(Object.entries( hightlightabletext.getAttribute("troika-text").colorRanges )[2][0])+1
+	if (invert) newEnd-=2
+	if (newEnd<0) newStart = 0
+	let lengthString = hightlightabletext.getAttribute("troika-text").value.length
+	if (newEnd>lengthString) newStart = lengthString-1
+
+	let range = {}
+	range[0] = 0xffffff
+	range[start] = 0x0099ff
+	range[newEnd] = 0xffffff
+	hightlightabletext.setAttribute("troika-text", {colorRanges: range})
+}
+
+let selections = []
+function extractSelection(){
+	// should have a refractory period, i.e. don't repeat if done less than 1s ago
+	if ( Date.now() - lastExecuted['getSelectionWithRefractoryPeriod'] < 500 ){
+		console.warn('ignoring, executed during the last 500ms already')
+		return
+	}
+	lastExecuted['getSelectionWithRefractoryPeriod'] = Date.now()
+	let startPos = Number(Object.entries( hightlightabletext.getAttribute("troika-text").colorRanges )[1][0])
+	let endPos = Number(Object.entries( hightlightabletext.getAttribute("troika-text").colorRanges )[2][0])
+	let text = hightlightabletext.getAttribute("troika-text").value.substring(startPos, endPos)
+	addNewNote(text)
+	selections.push(text)
+	document.querySelector('#jsondownload').href=URL.createObjectURL( new Blob([JSON.stringify(selections)], { type:`text/json` }) ) 
+}
+
+// trying to find a convenient way to be responsive with controllers to interact, not just hand tracking
+AFRAME.registerComponent('raycaster-targets', {
+	init: function () {
+    // Use events to figure out what raycaster is listening so we don't have to hardcode the raycaster.
+    this.el.addEventListener('raycaster-intersected', evt => { this.raycaster = evt.detail.el; });
+    this.el.addEventListener('raycaster-intersected-cleared', evt => { this.raycaster = null; });
+  },
+
+  tick: function () {
+    if (!this.raycaster) { return; }  // Not intersecting.
+
+    let intersection = this.raycaster.components.raycaster.getIntersection(this.el);
+    if (!intersection) { return; }
+    console.log(intersection.point);
+	  this.el.setAttribute( "color", "red" )
+  }
+})
+
+AFRAME.registerComponent('setupable', {
+  init: function () {
+	let setupableEl = this.el
+	if (!setupableEl.id){
+		console.warn('setupable fail, target element needs unique ID')
+		// could also check on geometry, i.e. box only for now
+		return
+	}
+	let w = setupableEl.getAttribute("width")
+	let h = setupableEl.getAttribute("height")
+	let d = setupableEl.getAttribute("depth")
+	
+	let controlPointEl1 = document.createElement("a-sphere")
+	controlPointEl1.setAttribute("position", "" + w/2 + " " + h/2 + " " + d/2)
+	// should be based on element width/height/depth
+	controlPointEl1.setAttribute("radius", ".02")
+	controlPointEl1.setAttribute("wireframe", "true")
+	controlPointEl1.setAttribute("segments-height", 8)
+	controlPointEl1.setAttribute("segments-width", 8)
+	controlPointEl1.setAttribute("color", "yellow")
+	controlPointEl1.setAttribute("target", "")
+	controlPointEl1.setAttribute("controlpoint", setupableEl.id)
+	controlPointEl1.id = "controlPointEl1_"+setupableEl.id
+	controlPointEl1.setAttribute("onpicked", "selectedElements.at(-1).element.setAttribute('wireframe', 'false')") 
+	controlPointEl1.setAttribute("onreleased", "setupEntity('"+setupableEl.id+"')")
+	//	AFRAME.scenes[0].appendChild(controlPointEl1)
+	setupableEl.appendChild(controlPointEl1)
+
+	let controlPointEl2 = document.createElement("a-sphere")
+	controlPointEl2.setAttribute("position", "" + -w/2 + " " + -h/2 + " " + -d/2)
+	// should be based on element width/height/depth
+	controlPointEl2.setAttribute("radius", ".02")
+	controlPointEl2.setAttribute("wireframe", "true")
+	controlPointEl2.setAttribute("segments-height", 8)
+	controlPointEl2.setAttribute("segments-width", 8)
+	controlPointEl2.setAttribute("color", "yellow")
+	controlPointEl2.setAttribute("target", "")
+	controlPointEl2.setAttribute("controlpoint", setupableEl.id)
+	controlPointEl2.setAttribute("onreleased", "setupEntity('"+setupableEl.id+"')") 
+	controlPointEl2.id = "controlPointEl2_"+setupableEl.id
+	//	AFRAME.scenes[0].appendChild(controlPointEl1)
+	setupableEl.appendChild(controlPointEl2)
+
+	// console.log('setupable', AFRAME.scenes) // very weird... scene should be loaded when component register and initiate
+  },
+
+  //tick: function () { }
+})
+
+function setupEntity( id ){
+	// assuming some world/axis alignment
+
+	let setupableEl = document.getElementById(id)
+	
+	let controlPointEl1 = document.getElementById( "controlPointEl1_"+setupableEl.id )
+	let controlPointEl2 = document.getElementById( "controlPointEl2_"+setupableEl.id )
+
+	let middlePos = new THREE.Vector3()
+	middlePos = controlPointEl1.object3D.position.clone() 
+	middlePos.add(controlPointEl2.object3D.position.clone())
+	middlePos.divideScalar(2)
+	middlePos.add( setupableEl.object3D.position.clone() ) // becoming world coordinates instead, assuming that the parent object has no parent
+	setupableEl.setAttribute("position", AFRAME.utils.coordinates.stringify(middlePos) )
+
+	let w = Math.abs( controlPointEl1.object3D.position.x - controlPointEl2.object3D.position.x )
+	let h = Math.abs( controlPointEl1.object3D.position.y - controlPointEl2.object3D.position.y )
+	let d = Math.abs( controlPointEl1.object3D.position.z - controlPointEl2.object3D.position.z )
+
+	setupableEl.setAttribute("width", w)
+	setupableEl.setAttribute("height", h)
+	setupableEl.setAttribute("depth", d)
+
+	// could also some rotations as we can assume a table to be flat
+}
+
+function loadOnPannels(){
+	let url ="https://webdav.benetou.fr/fotsave/fot_sloan_companion_public/augmented_paper.pdf-"
+	let extension = ".jpg"
+	let selector = "#deskpanels"
+	Array.from( document.querySelector(selector).children )
+	.map( (p,i) => {
+		p.setAttribute("wireframe", "false");
+		p.setAttribute("depth", "1");
+		p.setAttribute("src", url+i+extension)
+	})
+}
+
+function toggleAnchors(){
+	let anchorsFound = false
+	targets.map( t => { el = t.querySelector("a-sphere[color=blue]"); if (el) anchorsFound = true} )
+	if (anchorsFound){
+		targets.map( t => { el = t.querySelector("a-sphere[color=blue]"); if (el) el.remove()} )
+		targets.map( t => { el = t.querySelector("a-sphere[color=blue]"); if (el) el.remove()} )
+		// somehow needed twice for table anchor
+	} else {
+		makeAnchorsVisibleOnTargets()
+	}
+}
+
+function noteFromMetaData(){
+	f = Object.values(filesWithMetadata)[0]
+	addNewNote( "First file\n\n"+Object.getOwnPropertyNames( f )
+		.filter( p => (p == "size" || p.endsWith("timeMs")) )
+		.map( p =>  p + "\t: " + f[p]).join('\n') )
+	// should instead take any filename, ideally any object, including interface ones
+		// then visually highlight metadata with dedicated affordances
+
+	// consider also metadata on non-files, e.g. every thing in <a-scene> with an ID
+}
+
+/* PDF reflow demo
+
+loadOnPannels() // should make them target too
+r = Array.from( document.querySelector("#deskpanels").children ).sort( (a,b) => a.object3D.position.z > b.object3D.position.z ).map( el => el.getAttribute("src")).map( url => url.replace(/.*pdf-/,'').replace('.jpg','')).map( r => Number(r)+1)
+
+	// could also filter
+		// in 
+			// only objects with a class or property (e.g. target)
+		// out 
+			// object with a class (e.g. only .document_part)
+			// outside of a volume
+				// e.g. z < -1 || z > 1 || x < -1 ...
+				// this could be made visible
+	// could also provide feedback as preview
+		// e.g. selected pages 1, 2, 4, 5 (in that orqder) (in that order)
+
+fetch("/save-as-new-pdf/augmented_paper.pdf/"+JSON.stringify(r))
+// should send back URL after, maybe via ntfy
+
+// jpg (montage) or
+	// https://stackoverflow.com/questions/37709879/how-to-generate-a-collage-image-like-shown
+	// via fetch("/save-as-new-montage/augmented_paper.pdf/"+JSON.stringify(r))
+		// indexing on 0 so no need for +1 on page number
+// HTML working
+
+// alternatively copy this converter than make
+	// epub, PmWiki, MarkDown, etc
+		// not to be downloaded though, with live URL, still usable
+	// SVG (using <image href"">)
+		// https://developer.mozilla.org/en-US/docs/Web/SVG/Element/image
+		// can maybe be done client side via file reader
+	// glb
+		// potentially from glTF with external images then https://github.com/donmccurdy/glTF-Transform
+			// or https://gltf-transform.dev/cli
+		// can be done client side via threejs
+			// cf e.g. https://git.benetou.fr/utopiah/text-code-xr-engine/issues/24
+*/
+
+let mediaRecorder
+let chunks = []
+// could instead be an array of audio elements
+let audioElements = []
+	// then create element and push
+let audioRecordingBlob 
+
+// will request permissions, potentially kicking out of XR
+	// probably safer to do so via a microphone emoji in 2D
+	// could also call setupRecorder() if mediaRecorder is still null
+		// removes a step for the user
+function setupRecorder(){
+	if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+	  console.log("getUserMedia supported.");
+	  navigator.mediaDevices
+	    .getUserMedia( { audio: true, },)
+
+	    // Success callback
+	    .then((stream) => {
+			mediaRecorder = new MediaRecorder(stream);
+			mediaRecorder.ondataavailable = (e) => {
+				chunks.push(e.data);
+			};
+
+			mediaRecorder.onstop = (e) => {
+				const audioBlob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+				audioRecordingBlob = audioBlob
+				chunks = [];
+				const audio = document.createElement("audio")
+				audio.src = window.URL.createObjectURL(audioBlob)
+				audio.play()
+				audioElements.push(audio)
+				addXRAudioWidget( audioElements.length-1 )
+				// should add a new AFrame entity too, so that it has a player
+					// ideally it's also play/pause as toggle, not just play (as of right now)
+			}
+
+		})
+
+	    // Error callback
+	    .catch((err) => {
+	      console.error(`The following getUserMedia error occurred: ${err}`);
+	    });
+	} else {
+	  console.error("getUserMedia not supported on your browser!");
+	}
+}
+
+let latest_audio_id
+
+// for Apple support on Vision Pro
+	// cf https://stackoverflow.com/questions/31776548/why-cant-javascript-play-audio-files-on-iphone-safari
+const audio = new Audio();
+audio.autoplay = true;
+
+function latestAudioPlay(){
+	// onClick of first interaction on page before I need the sounds
+	// (This is a tiny MP3 file that is silent and extremely short - retrieved from https://bigsoundbank.com and then modified)
+	audio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"
+	if (latest_audio_id) audio.src = latest_audio_id.src
+	audio.play()
+}
+
+async function addRecentAudioFiles(){
+        const contents = await webdavClient.getDirectoryContents(subdirWebDAV);
+        // consider instead search https://github.com/perry-mitchell/webdav-client#search
+        contents.filter(f => f.basename.endsWith('.ogg'))
+        .sort( (a,b) => new Date(a.lastmod).getTime() < new Date(b.lastmod).getTime() ) // newest first
+	.slice(0,4) // top or last?
+        .map(a => {
+		const audio = document.createElement("audio")
+		audio.src = a.basename
+		audioElements.push(audio)
+		addXRAudioWidget( audioElements.length-1 )
+        })
+}
+
+function addXRAudioWidget(n){
+	// should become available via showFile() thus become a filter
+	let rootEl = document.getElementById("audiowidgets")
+	let el = document.createElement("a-entity")
+	let color= Math.random().toString(16).substr(-6)
+	let miniID = Math.random().toString(36).slice(-1).toUpperCase()+Math.floor(Math.random()*10)
+	el.id = color + '_' + miniID
+	latest_audio_id = el.id
+	el.innerHTML = 
+		//`<a-troika-text anchor=left target value="jxr latestAudioPlay()" rotation="0 90 0" position="0 ${-n*.1} 0" scale="0.1 0.1 0.1">
+		`<a-troika-text class="audiorecordings" anchor=left target value="jxr audioElements[${n}].play()" rotation="0 90 0" position="0 ${-n*.1} 0" scale="0.1 0.1 0.1">
+			<a-entity scale=".2 .2 .2" class="icon speaker" position="-.5 0 0">
+				<a-cylinder color=gray radius=.3 rotation="0 0 90"></a-cylinder>
+				<a-cone color=gray radius-top=".1" rotation="0 0 90"></a-cone>
+				<a-box color=${'#'+color} scale="" position="1 0 0"></a-box>
+				<a-troika-text value="${miniID}" position="1 0 .51" font-size=1></a-troika-text>
+			</a-entity>
+		</a-troika-text>`
+	rootEl.appendChild(el)
+	// <a-sphere color=purple radius=".5" position="1 0 0"></a-sphere>
+}
+
+function associateLatestDropRecordingClosestHighlight(){
+	let el = selectedElements.at(-1).element
+	// check distance to all highlights
+	let foundHighlights = nonBlackHighlitableTexts()
+	// find closest under threshold...
+	foundHighlights.map( h => {
+		// doesn't seem to get world coordinates, probably due to parenting
+		let p1 = new THREE.Vector3()
+		el.object3D.getWorldPosition( p1 )
+		let p2 = new THREE.Vector3()
+		h.object3D.getWorldPosition( p2 )
+		let dist = p1.distanceTo( p2 )
+		console.log( dist )
+		// even while trying to get world coordinates the distance seems of, close to 1 when it should be 0.
+			// it does seems to be proportional though, i.e. it increases while moving objects away
+				// could visually show what has been tested, i.e. last 2 elements and a line between both
+	})
+}
+
+function saveAudioFile(filename="audiofile.ogg"){
+// this could support multiple audio element as input, not "just" audioRecordingBlob, i.e the last one
+	  const reader = new FileReader();
+	  reader.onloadend = (evt) => {
+		fileContent = evt.target.result
+		async function w(path = "/file.txt"){ return await webdavClient.putFileContents(path, fileContent); }
+		written = w(subdirWebDAV+usernamePrefix+filename)
+		if (written){
+			fetch('https://ntfy.benetou.fr/fileuploadtowebdav', { method: 'POST', body: 'added '+usernamePrefix+filename })
+			// available then as https://webdav.benetou.fr/fotsave/fot_sloan_companion_public/audiofile.ogg
+		}
+	  };
+	  reader.readAsArrayBuffer(audioRecordingBlob); 
+		// always saving the last recorded one
+}
+
+function saveHighlights(filename="highlights.json"){
+	async function w(path = "/file.txt"){ return await webdavClient.putFileContents(path, JSON.stringify(getHighlights())); }
+	// note that this only single page saving, should instead consider highlightsBetweenPageChanges but after dedup
+	console.log('browsable in 2D at https://companion.benetou.fr/highlights_example.html')
+	written = w(subdirWebDAV+usernamePrefix+filename)
+	if (written){
+		fetch('https://ntfy.benetou.fr/fileuploadtowebdav', { method: 'POST', body: 'added '+usernamePrefix+filename })
+		// available then as https://webdav.benetou.fr/fotsave/fot_sloan_companion_public/highlights.json
+	}
+}
+
+// TODO annotations via screenshot richer UX
+	// add filter/screenshotux.js
+		// add audio recorder capability
+		// highlighters
+
+function saveScreenshot(filename="screenshot_test.jpg"){
+	// https://git.benetou.fr/utopiah/text-code-xr-engine/commit/d5bc01251ecb2380c9be0b456d2a7b68fd16e4f2
+	document.querySelector('a-scene').components.screenshot.getCanvas('perspective').toBlob( blob => { 
+	  let imgBlob = new File([blob], filename, { type: "image/jpeg"});
+
+	  const reader = new FileReader();
+	  reader.onloadend = (evt) => {
+		fileContent = evt.target.result
+		async function w(path = "/file.txt"){ return await webdavClient.putFileContents(path, fileContent); }
+		written = w(subdirWebDAV+usernamePrefix+filename)
+		if (written){
+			fetch('https://ntfy.benetou.fr/fileuploadtowebdav', { method: 'POST', body: 'added '+usernamePrefix+filename })
+			// available then as https://webdav.benetou.fr/fotsave/fot_sloan_companion_public/screenshot_test.jpg
+		}
+	  };
+	  reader.readAsArrayBuffer(imgBlob); 
+	}, "image/jpeg", 0.8);
+}
+
+function saveCSLJson(filename="example_bibliography.csl.json"){
+	// could get again get snippets of a certain type, e.g. .bibliographyitem only
+		// filtered on within a specific volume, e.g. within unit cube around center but .5m above floor and in front
+			// so not centered on 0 0 0 but rather on 0 1 -.5 (can be visualized via e.g. wireframe)
+		// can rely on a filter/ instead 
+	let readExample = "https://webdav.benetou.fr/fotsave/ExportedItems-FromZoteroAsCSLJSON.json"
+	fetch(readExample).then( r => r.json() ).then( fileContent => {
+		// fileContent.map( i => { return {title:i.title, note:i.note.split('\n')}})
+		fileContent.map( (i,n) => addNewNote( i.title, position=`-0.2 ${1+n*.1} -0.1`, "0.1 0.1 0.1", "bibliographyitem_"+n, "bibliographyitem" ) )
+		// could instead make snippets with addNewNote(i.title) then add the right class, etc
+		setTimeout( _ => {
+			console.log( Array.from( document.querySelectorAll(".bibliographyitem") )
+				.filter( i => i.object3D.position.y > 0.5 && i.object3D.position.y < 1.5 )
+				.sort( (a,b) => a.object3D.position.y > b.object3D.position.y )
+			)
+			// could then save back
+		}, 500)
+		async function w(path = "/file.txt"){ return await webdavClient.putFileContents(path, JSON.stringify(fileContent)); }
+		// written = w(subdirWebDAV+usernamePrefix+filename)
+		// in turn available as https://companion.benetou.fr/poweruser_example_bibliography.csl.json
+	})
+}
+
+// requires running locally, e.g. OLLAMA_HOST=0.0.0.0 OLLAMA_ORIGINS=* ollama serve on the same machine (hence does not work remotely or on HMD)
+function ollamaToNote(llmPrompt = "Why is the sky blue?" ){
+	// could be used based on the transcription of an audio recording
+	fetch('http://localhost:11434/api/generate', { method: 'POST',body:
+		'{\n  "model": "deepseek-r1:1.5b",\n  "prompt": "'+llmPrompt+'",\n  "stream": false\n}'
+	})
+	.then( res => res.json() ).then( res => addNewNote(res.response))
+	//.then( res => res.json() ).then( res => addNewNote(res.response.replace(/think[\s\S]*?think/,'')))
+	// here with deepseek could remove the <think></think> part
+}
+
+function startViewCheck(){
+	let visualArrow = document.createElement("a-cone")
+	visualArrow.id = 'visualarrow'
+	visualArrow.setAttribute("opacity", .3)
+	visualArrow.setAttribute("position", "0 0.5 -1")
+	visualArrow.setAttribute("scale", "0.1 0.1 0.1")
+	visualArrow.setAttribute("segments-height", 8)
+	visualArrow.setAttribute("segments-width", 8)
+	player.appendChild(visualArrow)
+	setInterval( i => inView(document.querySelector("a-console")), 100 )
+}
+
+// -----=========== snap closest =============--------------------------------------------------------------------------------------------
+
+function snapClosest(snappable=null){ // not selector but array
+        let lastPick = selectedElements.at(-1).element
+	
+	let smallestEl
+	let smallestDistance
+	if (!snappable) snappable = Array.from( deskpanels.children )
+
+	snappable.map( p => {
+		let d = lastPick.object3D.position.distanceTo( p.object3D.position )
+		if (!smallestEl) {
+			smallestEl = p
+			smallestDistance = d
+		}
+		if (d < smallestDistance) {
+			smallestEl = p
+			smallestDistance = d
+		}
+	})
+	if (smallestEl){
+		lastPick.object3D.position.copy( smallestEl.object3D.position )
+		lastPick.object3D.rotation.copy( smallestEl.object3D.rotation )
+		lastPick.object3D.rotateX(-Math.PI/2)
+			// can't read the text... it is backward
+		// arbitrary offset for pannels, could be a parameter
+	}
+}
+
+// -----=========== HUD visibility =============--------------------------------------------------------------------------------------------
+
+function toggleHUDVisibility(){
+	let opacity = typinghud.getAttribute("material").opacity
+	if ( opacity > .1 )
+		typinghud.setAttribute("material","opacity", .1)
+	else
+		typinghud.setAttribute("material","opacity", .5)
+}
+
+// -----=========== Cube =============--------------------------------------------------------------------------------------------
+
+function toggleShowCube(){
+	if ( cubetest.getAttribute("visible") )
+		cubetest.setAttribute("visible", "false")
+	else
+		cubetest.setAttribute("visible", "true")
+}
+
+function addCubeWithAnimations(){
+	let cube = document.createElement("a-entity")
+	cube.id = "cube"
+	cube.setAttribute("position", "0.2 1.2 -.7")
+	//cube.setAttribute("position", "0 1 -1")
+	cube.setAttribute("target", "")
+	AFRAME.scenes[0].appendChild(cube)
+
+	function cubeFace(parentElement){
+		let face = document.createElement("a-box")
+		face.setAttribute("scale", ".1 .1 .01")
+		face.setAttribute("wireframe", "true")
+		let axis = document.createElement("a-entity")
+		// not actually used
+		axis.appendChild(face)
+		parentElement.appendChild(axis)
+		return face
+	}
+
+	let elFaceName 
+	let face_number = 0
+	let f = cubeFace(cube)
+	f.id = "face_"+"ABCDEF"[face_number++]
+	elFaceName = document.createElement("a-troika-text")
+	elFaceName.setAttribute("value", f.id )
+	f.appendChild(elFaceName)
+	const targetAngle = .03
+	const animate = false
+	// https://animejs.com/documentation/#JSobject
+	// https://threejs.org/docs/#api/en/core/Object3D.rotateOnAxis
+	if (animate) AFRAME.ANIME({targets: cube.children[0].object3D, update: function(){ cube.children[0].object3D.rotateX(-targetAngle)} })
+	//AFRAME.ANIME({targets: cube.children[0].object3D, update: function(){ cube.children[0].object3D.translateY(-.001)} })
+	//AFRAME.ANIME({targets: cube.children[0].object3D, update: function(){ cube.children[0].object3D.translateY(-.002)} })
+	f = cubeFace(cube)
+	f.id = "face_"+"ABCDEF"[face_number++]
+	elFaceName = document.createElement("a-troika-text")
+	elFaceName.setAttribute("value", f.id )
+	f.appendChild(elFaceName)
+	// adding visible name to help identify on movement and animations
+	f.setAttribute("position", ".05 0 .05")
+	f.setAttribute("rotation", "0 90 0")
+	if (animate) AFRAME.ANIME({targets: cube.children[1].object3D, update: function(){ cube.children[1].object3D.rotateZ(-targetAngle)} })
+	f = cubeFace(cube)
+	f.id = "face_"+"ABCDEF"[face_number++]
+	elFaceName = document.createElement("a-troika-text")
+	elFaceName.setAttribute("value", f.id )
+	f.appendChild(elFaceName)
+	f.setAttribute("position", "0 0 .1")
+	if (animate) AFRAME.ANIME({targets: cube.children[2].object3D, update: function(){ cube.children[2].object3D.rotateX(targetAngle)} })
+	f = cubeFace(cube)
+	f.id = "face_"+"ABCDEF"[face_number++]
+	elFaceName = document.createElement("a-troika-text")
+	elFaceName.setAttribute("value", f.id )
+	f.appendChild(elFaceName)
+	f.setAttribute("position", "-0.05 0 .05")
+	f.setAttribute("rotation", "0 90 0")
+	if (animate) AFRAME.ANIME({targets: cube.children[3].object3D, update: function(){ cube.children[3].object3D.rotateZ(targetAngle)} })
+	// bottom face
+	f = cubeFace(cube)
+	f.id = "face_"+"ABCDEF"[face_number++]
+	elFaceName = document.createElement("a-troika-text")
+	elFaceName.setAttribute("value", f.id )
+	f.appendChild(elFaceName)
+	f.setAttribute("rotation", "90 0 0")
+	f.setAttribute("position", "0 -0.05 0.05")
+	// top face
+	f = cubeFace(cube)
+	f.id = "face_"+"ABCDEF"[face_number++]
+	elFaceName = document.createElement("a-troika-text")
+	elFaceName.setAttribute("value", f.id )
+	f.appendChild(elFaceName)
+	f.setAttribute("rotation", "90 0 0")
+	f.setAttribute("position", "0 0.05 0.05")
+
+	cube.id = "cubetest"
+	return cube
+}
+
+// both functions should be toggable as ways to revert
+function unfoldCube(){
+	// should save rotation/positions first
+	Array.from( cubetest.querySelectorAll("a-box") ).map( (f,i) => { 
+		f.formerRotation = f.getAttribute("rotation")
+		f.setAttribute("rotation", "0 0 0")
+		f.formerPosition = AFRAME.utils.coordinates.stringify( f.getAttribute("position") )
+		f.setAttribute("position", i/(10-1)+" 0 0") 
+	} )
+	// each face has a parent with also element with an offset position
+}
+
+function refoldCube(){
+	// should save rotation/positions first
+	Array.from( cubetest.querySelectorAll("a-box") ).map( (f,i) => { 
+		f.setAttribute("rotation", f.formerRotation )
+		f.setAttribute("position", f.formerPosition ) 
+	} )
+	// each face has a parent with also element with an offset position
+}
+function roomScaleCube(){
+	cubetest.setAttribute("scale", "20 20 20"); cubetest.setAttribute("position", "0 1 -1"); cubetest.setAttribute("rotation", "0 0 0")
+}
+
+function palmScaleCube(){
+	cubetest.setAttribute("scale", "1 1 1"); cubetest.setAttribute("position", "0 1 -1")
+}
+
+function addCube(){
+	let cube = document.createElement("a-entity")
+	cube.setAttribute("position", "1 1 -.5")
+	cube.setAttribute("target", "")
+	AFRAME.scenes[0].appendChild(cube)
+
+	let cubeloweraxis = document.createElement("a-entity")
+	cubeloweraxis.setAttribute("position", "-.1 0 0")
+	cubeloweraxis.setAttribute("animation__rot", "property:rotation.z; to:90")
+	cubeloweraxis.setAttribute("animation__pos", "property:position; to:-.1 -.1 0")
+	let sll = document.createElement("a-box")
+	sll.setAttribute("scale", ".1 .1 .01")
+	sll.setAttribute("position", "0.05 0 0")
+	sll.setAttribute("rotation", "0 90 0")
+	sll.setAttribute("wireframe", "true")
+	cubeloweraxis.appendChild(sll)
+	cube.appendChild(cubeloweraxis)
+
+// too complicated... should make 1 face, rotate along it's bottom axis then duplicate it and rotate accordingly
+	// note that 2 faces are specials in regard to animations
+		// bottom part do not move
+		// top part move alongside another moving face, e.g. front face
+
+	let ssra = document.createElement("a-entity")
+	ssra.setAttribute("position", ".1 0 0")
+	ssra.setAttribute("animation__rot", "property:rotation.z; to:-90")
+	ssra.setAttribute("animation__pos", "property:position; to:.1 0 0")
+	let srr = document.createElement("a-box")
+	srr.setAttribute("scale", ".1 .1 .01")
+	srr.setAttribute("position", ".05 0 0")
+	srr.setAttribute("rotation", "0 90 0")
+	srr.setAttribute("wireframe", "true")
+	ssra.appendChild(srr)
+	cube.appendChild(ssra)
+
+	let sl = document.createElement("a-box")
+	sl.setAttribute("scale", ".1 .1 .01")
+	sl.setAttribute("position", "0 -.05 0")
+	sl.setAttribute("rotation", "90 0 0")
+	sl.setAttribute("wireframe", "true")
+	cube.appendChild(sl)
+	let sr = document.createElement("a-box")
+	sr.setAttribute("scale", ".1 .1 .01")
+	sr.setAttribute("position", "0 .05 0")
+	sr.setAttribute("rotation", "90 0 0")
+	sr.setAttribute("wireframe", "true")
+	cube.appendChild(sr)
+	let sb = document.createElement("a-box")
+	sb.setAttribute("scale", ".1 .1 .01")
+	sb.setAttribute("position", "0 0 -.05")
+	sb.setAttribute("wireframe", "true")
+	cube.appendChild(sb)
+	let sf = document.createElement("a-box")
+	sf.setAttribute("scale", ".1 .1 .01")
+	sf.setAttribute("position", "0 0 .05")
+	sf.setAttribute("wireframe", "true")
+	cube.appendChild(sf)
+	return cube
+}
+
+// -----=========== indicator in view =============--------------------------------------------------------------------------------------------
+
+let isInView = false
+function inView(targetSelector){
+	// https://stackoverflow.com/a/69955650/1442164
+	const frustum = new THREE.Frustum()
+	const camera = AFRAME.scenes[0].camera
+	const matrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
+	frustum.setFromProjectionMatrix(matrix)
+	isInView = frustum.containsPoint(targetSelector.object3D.position)
+	if (isInView){
+		// could also use HUD on state change e.g. if (isInView) setFeedbackHUD('Out of view')
+		visualarrow.setAttribute("opacity", .01)
+	} else {
+		visualarrow.setAttribute("opacity", .3)
+		visualarrow.object3D.lookAt( targetSelector.object3D.position )
+		// seems it needs an offset, maybe due to the cone initial rotation (i.e. pointing up)
+		visualarrow.object3D.rotateX(1)
+			// still looks vertically off
+	}
+}
+
+// -----=========== adjust pinch thickness line =============--------------------------------------------------------------------------------------------
+
+function adjustPinchThicknessLines(thickness){
+	document.querySelector("#rightHand").object3D.traverse( o => { if (o.material) o.material.wireframeLinewidth=thickness } )
+}
+
+// -----=========== demos management =============--------------------------------------------------------------------------------------------
+
+let demos
+
+function nextDemo(){ 
+// basically just caching at this point...
+	if ( demos ) {
+		moveToNextDemo()
+	} else {
+		fetch('/demo_q1.json').then( r => r.json() ).then( r => {
+			demos = r["content"]
+			moveToNextDemo()
+		})
+	}
+}
+
+function moveToNextDemo(){
+	let internalOrigin = "&sourceFromNextDemo=true" // should be use to display a welcome message, clarifying the name of the demo and what can be done
+	let availableDemos = [].concat( ...demos.filter( d => d.usernames ).map( d => d.usernames ) )
+	// too complicated data structure... (due to not having 1-1 URL/demo matching, should simplify that)
+		// possibly using a tree where each demos has an optional next one, then following that instead (can become a cycling graph...)
+			// if modifying though then must modify demos_example.html too (which is short so no problem)
+	let pos = availableDemos.indexOf( username )
+	if (pos > -1 && pos < availableDemos.length-1)
+		location.href = "/index.html?username=" + availableDemos[++pos] + internalOrigin
+	if (pos == -1)
+		location.href = "/index.html?username=" + availableDemos[0] + internalOrigin
+}
+
+function addDemoScreenshot( demo ){
+	let el = document.createElement("a-image")
+	AFRAME.scenes[0].appendChild(el)
+	el.setAttribute("position", "0 "+(Math.random()+1)+" 0.5" ) 
+	el.setAttribute("rotation", "0 180 0")
+	el.setAttribute("scale", ".1 .1 .1")
+	el.setAttribute("src", demo.screenshot)
+	el.setAttribute("target", "")
+	// consider child of
+		// addNewNote("jxr location.href='/index.html?username="+u+"'", "0.5 "+(1+i/10)+" .5", "0 180 0" )
+		// instead BUT assumes 1 screenshot per username, thus URL
+}
+
+function addMetaDataCurrentDemo(){
+	let matches = demos.filter( d => d.usernames?.includes(username) )
+	matches.map( currentDemo => {
+		if (currentDemo.name) {
+			let nameEl = addNewNote(currentDemo.name, "0.1 1.8 -.4") 
+			nameEl.id = "demoMetaDataName"
+		}
+		if (currentDemo.description) {
+			let descriptionEl = addNewNote(currentDemo.description, "0.1 1.7 -.5")
+			descriptionEl.id = "demoMetaDataDescription"
+		}
+	})
+}
+
+AFRAME.registerComponent('current-demo-metadata', {
+  init: function () {
+	if ( demos ) {
+		addMetaDataCurrentDemo()
+	} else {
+		fetch('/demo_q1.json').then( r => r.json() ).then( r => {
+			demos = r["content"]
+			addMetaDataCurrentDemo()
+		})
+	}
+  }
+})
+
+AFRAME.registerComponent('timed-demos', {
+  init: function () {
+	fetch('/demo_q1.json').then( r => r.json() ).then( r => {
+		demos = r["content"]
+		const baseURL = r["configuration"].prefixurl
+		r["content"].filter( c => c.usernames?.length>0 ).map( c=> {
+			if (c.screenshot) addDemoScreenshot( c )
+			c.usernames.map( u => console.log( baseURL+u ) )
+			c.usernames.map( (u,i) => {
+				addNewNote("jxr location.href='/index.html?username="+u+"'", "0.5 "+(1+i/10)+" .5", "0 180 0" )
+			})
+		})
+		// addNewNote("jxr nextDemo()", "-0.5 1 -.5" )
+	})
+  }
+})
+
+// -----=========== ... =============--------------------------------------------------------------------------------------------
+
+// generalize snapClosest() to any selector
+	// use that as example on result of audio notes for manuscript editing
+	// could also test, if snapped on manuscript, then append content to it
+
+// -----=========== sequential filters on interactions, e.g. on drop and on release =============--------------------------------------------------------------------------------------------
+
+
+// should also do on move but slightly different logic
+	// should generalize to any event
+
+	// on drop meta data optional... an in VR debug mode in order to show e.g. position/rotation of the last dropped element
+		// arguably could be ANOTHER middleware case, namely onreleased does one action per item... but could also do more for all items, with filtering per class, position, etc
+			// could NOT be added to 'onreleased' or 'onpicked' component within the try/catch block, before and after the eval
+				// because it means it would only apply to such elements
+					// should instead be applied to ALL targets
+		// consequently should be modifying the target component
+
+	// test case : onreleased : if (el.getAttribute("color") == "red") console.log( el.getAttribute("position") )
+
+let currentFilterOnPicked = null
+let currentFilterOnReleased = null
+
+function applyNextFilterInteraction( element, filters, filter ){
+	filters.map( f => f(element) ) // simplified version, no next() as done with filters
+	console.log( "done filtering for" )
+}
+
+function colorChangeJXROnly( el ){
+        if ( el.getAttribute("value")?.includes("jxr") ) el.setAttribute("color", "green")
+}
+
+sequentialFiltersInteractionOnReleased.push( colorChangeJXROnly )
+
+function colorChangeSpecificCommandNameOnly( el ){
+        if ( el.getAttribute("value")?.includes("location.reload") ){
+		el.setAttribute("color", "pink")
+		// could try applying to only that segment... requires a bit of troika text syntax (and assumptions, e.g. only appear once)
+		el.setAttribute("scale", ".2 .2 .2")
+	}
+}
+
+sequentialFiltersInteractionOnReleased.push( colorChangeSpecificCommandNameOnly )
+
+function colorChangeSpecificPerId( el ){ 
+	if ( el.id == "virtualdesktopplanemovable" ) el.setAttribute("color", "#ddd")
+	if ( el.id == "manuscript" ) el.setAttribute("color", "white")
+}
+sequentialFiltersInteractionOnReleased.push( colorChangeSpecificPerId )
+// could it be a lambda?
+
+// should try on absolute position, relative position, etc
+	// should show non overlapping consequences, e.g. one filter change color, the next changes scale
+		// thus showcasing composability
+	// then add those filters as examples to remix
+
+// -----=========== ... =============--------------------------------------------------------------------------------------------
+
+AFRAME.registerComponent('instructions-on-hands', {
+  init: function () {
+	let rightEl = addNewNote( "pinch to move" )
+	rightEl.setAttribute("scale", ".05 .05 .05")
+	rightEl.setAttribute("position", "0 .03 -.05")
+	rightEl.setAttribute("rotation", "0 -90 0")
+	rightEl.id = "right_hand_instruction"
+	let leftEl = addNewNote( "pinch to execute" )
+	leftEl.setAttribute("scale", ".05 .05 .05")
+	leftEl.setAttribute("position", "0 .03 .02")
+	leftEl.setAttribute("rotation", "0 90 0")
+	leftEl.id = "left_hand_instruction"
+  },
+  tick: function (time, timeDelta) {
+	// definitley overkill... should have a connected event instead
+	const r_hand = AFRAME.scenes[0].object3D.getObjectByName("r_handMeshNode")?.parent.getObjectByName("thumb-metacarpal")
+	const l_hand = AFRAME.scenes[0].object3D.getObjectByName("l_handMeshNode")?.parent.getObjectByName("thumb-metacarpal")
+	if ( r_hand && right_hand_instruction.object3D.parent == AFRAME.scenes[0].object3D ) right_hand_instruction.object3D.parent = r_hand 
+	if ( l_hand && left_hand_instruction.object3D.parent == AFRAME.scenes[0].object3D ) left_hand_instruction.object3D.parent = l_hand 
+	// break expected target behavior
+		// on pick re-parent to scene then parent back on released
+  }
+})
+// -----=========== ... =============--------------------------------------------------------------------------------------------
+
+AFRAME.registerComponent('useraddednote', {
+  events: {
+	useraddednote:  function (e) {
+		let noteEl = e.detail.element
+		if ( noteEl.getAttribute("value").startsWith("jxr ") ) return
+		noteEl.classList.add("manuscriptnote")
+		// dirty mix of threejs and AFrame...
+		noteEl.object3D.parent = manuscript.object3D;
+		//noteEl.setAttribute("position", manuscript.children[0].getAttribute("position") )
+		//noteEl.setAttribute("rotation", manuscript.children[0].getAttribute("rotation") )
+		setTimeout( _ => noteEl.object3D.position.set( -.4, .4 + - document.querySelectorAll(".manuscriptnote").length/10, .51), 100 )
+		// messes up direct picking after, so could do an interaction filter on pick for this class
+			// relatively complex to keep track of but should work
+
+		// could until then prevent picking, e.g. removing the target
+        },
+  }
+})
+
+</script>
+
+<a-scene useraddednote list-files-sorted xr-mode-ui="enabled: true; enterAREnabled: true; XRMode: xr;">
+
+      <a-entity id="rig">
+                <a-entity id="player" hud camera look-controls wasd-controls waistattach="target: .movebypinch" position="0 1.6 0"></a-entity>
+		<a-entity laser-controls="hand: left" raycaster="objects: .collidable; far: .5"></a-entity>
+		<a-entity oculus-touch-controls="hand: right"></a-entity>
+                <a-entity id="rightHand" pinchprimary wristattachprimary="target: #otherbox" hand-tracking-controls="hand: right;"></a-entity>
+                <a-entity id="leftHand" pinchsecondary wristattachsecondary="target: #box" hand-tracking-controls="hand: left;"></a-entity>
+      </a-entity>
+
+      <a-sphere visible=true id=groundfor360 scale="2 .1 2" color="#ccc"></a-sphere>
+
+      <a-sphere segments-width=12 segments-height=12 pressable="" start-on-press="" id="box" radius="0.033" color="gray"></a-sphere>
+      <a-box pressable="" start-on-press-other="" id="otherbox" scale=".05 .05 .05" opacity=.3 wireframe=false color="white"></a-box>
+
+      <a-troika-text value="SpaSca : Spatial Scaffolding" anchor="left" outline-width="5%" font="https://fabien.benetou.fr/pub/home/future_of_text_demo/content/ChakraPetch-Regular.ttf" position="-5.26197 6.54224 -1.81284"
+        scale="4 4 5" rotation="90 0 0" troika-text="outlineWidth: 0.01; strokeColor: #ffffff" material="flatShading: true; blending: additive; emissive: #c061cb"></a-troika-text>
+      <a-sky id="environmentsky" class="hidableenvironment" hide-on-enter-ar color="darkgray"></a-sky>
+  
+      <a-entity visible="false" hide-on-enter-ar="" id="environment" rotation="0 -90 0" position="0 .65 0" scale='' gltf-model="url(Apartment.glb)" class="hidableenvironment" ></a-entity>
+      <a-troika-text id=instructions anchor="left" target value="instructions : \n--right pinch to move\n--left pinch to execute" position="0 1.65 -2" scale="0.1 0.1 0.1"></a-troika-text>
+
+
+	<a-entity id=basiccommands position="0 0 0.3">
+      <a-troika-text anchor=left target id="locationreload" value="jxr location.reload()" rotation="0 90 0" position="-.5 .9 0" scale="0.1 0.1 0.1"></a-troika-text>
+      
+      <a-troika-text anchor=left target id="toggleAnchors" value="jxr toggleAnchors()" rotation="0 90 0" position="-.5 1.25 0" scale="0.1 0.1 0.1"></a-troika-text>
+
+      <a-troika-text anchor=left target id="bumptableup" value="jxr virtualdesktopplanemovable.object3D.position.y+=.1" annotation="content:bump table" rotation="90 90 0" position="-.5 1.15 0" scale="0.1 0.1 0.1"></a-troika-text>
+      <a-troika-text anchor=left target id="bumptabledown" value="jxr virtualdesktopplanemovable.object3D.position.y-=.1" annotation="content:bump table down" rotation="90 90 0" position="-.5 1.0 0" scale="0.1 0.1 0.1"></a-troika-text>
+
+      <a-troika-text anchor=left target id="bumptabledown" value="jxr loadOnPannels()" annotation="content:load on panels" rotation="90 90 0" position="-.5 1.05 0" scale="0.1 0.1 0.1"></a-troika-text>
+	</a-entity>
+	
+
+      <a-console position="-1 1.3 0" rotation="-45 90 0" font-size="34" height="0.5" skip-intro="true"></a-console>
+
+      <a-box visible=false id="virtualdesktopplane" wireframe=true position="0 .9 -.5" height=.01 depth=.4></a-box>
+
+      <a-box visible=false id="virtualdesktopplanemovable" target setupable position="0 1.4 -.5" color="yellow" width=1 height=.01 depth=.02></a-box>
+	<!--
+      <a-box id="virtualdesktopplanemovablered" target position="0 1.6 -.3" color="red" width=.1 height=.01 depth=.1></a-box>
+      <a-box id="virtualdesktopplanemovablegreen" target position="-.5 1.6 -.3" color="green" width=.1 height=.01 depth=.1></a-box>
+      <a-box id="virtualdesktopplanemovableblue" target position=".5 1.6 -.3" color="blue" width=.1 height=.01 depth=.1></a-box>
+
+      <a-cylinder id="cylinderorange" target position=".25 1.7 -.3" color="orange" rotation="45 0 45" height=.1 radius=.01></a-cylinder>
+      <a-cylinder id="cylinderpurple" target position="-.25 1.7 -.3" color="purple" rotation="45 0 45" height=.1 radius=.01></a-cylinder>
+	-->
+
+	<a-entity visible=true id=middlecommands>
+      <a-troika-text anchor=left target value="jxr deskpanels.setAttribute('visible', 'true')" rotation="45 0 0" annotation="content:show panels" position="-.1 1.20 -.4" scale="0.1 0.1 0.1"></a-troika-text>
+      <a-troika-text anchor=left target value="jxr deskpanels.setAttribute('visible', 'false')" rotation="45 0 0" annotation="content:hide panels" position="-.1 1.10 -.4" scale="0.1 0.1 0.1"></a-troika-text>
+
+      <a-troika-text anchor=left target value="jxr environment.setAttribute('visible', 'true')" rotation="45 0 0" annotation="content:show background" position="-.5 1.20 -.4" scale="0.1 0.1 0.1"></a-troika-text>
+      <a-troika-text anchor=left target value="jxr environment.setAttribute('visible', 'false')" rotation="45 0 0" annotation="content:hide background" position="-.5 1.10 -.4" scale="0.1 0.1 0.1"></a-troika-text>
+	</a-entity>
+
+	<a-entity visible=false id=selectioncommands>
+      <a-troika-text anchor=left target value="jxr bumpSelection()" rotation="45 0 0" annotation="content:push selection" position=".5 1.20 -.4" scale="0.1 0.1 0.1"></a-troika-text>
+      <a-troika-text anchor=left target value="jxr bumpSelection(true)" rotation="45 0 0" annotation="content:pull selection" position=".5 1.15 -.4" scale="0.1 0.1 0.1"></a-troika-text>
+      <a-troika-text anchor=left target value="jxr growSelection()" rotation="45 0 0" annotation="content:grow selection" position=".5 1.10 -.4" scale="0.1 0.1 0.1"></a-troika-text>
+      <a-troika-text anchor=left target value="jxr growSelection(true)" rotation="45 0 0" annotation="content:shrink selection" position=".5 1.05 -.4" scale="0.1 0.1 0.1"></a-troika-text>
+
+      <a-troika-text anchor=left target value="jxr extractSelection()" rotation="45 0 0" annotation="content:clone selection" position=".5 1.00 -.4" scale="0.1 0.1 0.1"></a-troika-text>
+	</a-entity>
+
+	<a-entity visible=false id=deskpanels>
+	      <a-box class=panel position="1 1.3 -1" rotation="45 -45 0" wireframe=true height=.01 depth=.4></a-box>
+	      <a-box class=panel position="1 1.3 0" rotation="45 -90 0" wireframe=true height=.01 depth=.4></a-box>
+	      <a-box class=panel position="1 1.3 1" rotation="45 -135 0" wireframe=true height=.01 depth=.4></a-box>
+	      <a-box class=panel position="0 1.3 1.5" rotation="45 180 0" wireframe=true height=.01 depth=.4></a-box>
+	      <a-box class=panel position="-1 1.3 1" rotation="-45 -45 0" wireframe=true height=.01 depth=.4></a-box>
+	      <a-box class=panel position="-1 1.3 0" rotation="45 90 0" wireframe=true height=.01 depth=.4></a-box>
+	      <a-box class=panel position="-1 1.3 -1" rotation="45 45 0" wireframe=true height=.01 depth=.4></a-box>
+	</a-entity>
+
+	<a-entity id=topsidecommands>
+	<a-troika-text anchor=left target value='jxr setTimeout( _ => saveScreenshot("screenshot_"+Date.now()+".jpg") , 1000 )' rotation="0 90 0" position="-.7 1.50 .2" scale="0.1 0.1 0.1"></a-troika-text>
+	<a-troika-text anchor=left target value='jxr startViewCheck()' rotation="0 90 0" position="-.7 1.70 .2" scale="0.1 0.1 0.1"></a-troika-text>
+	</a-entity>
+
+	<a-entity visible=false id=highlightcommands>
+		<a-troika-text anchor=left target color="black" value='jxr highlightColor="black"' rotation="0 -90 0" position=".7 1.70 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<a-troika-text anchor=left target color="yellow" value='jxr highlightColor="yellow"' rotation="0 -90 0" position=".7 1.60 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<a-troika-text anchor=left target color="orange" value='jxr highlightColor="orange"' rotation="0 -90 0" position=".7 1.50 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<a-troika-text anchor=left target color="aqua" value='jxr highlightColor="aqua"' rotation="0 -90 0" position=".7 1.40 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<a-troika-text anchor=left target color="lime" value='jxr highlightColor="lime"' rotation="0 -90 0" position=".7 1.30 .2" scale="0.1 0.1 0.1"></a-troika-text>
+
+		<a-troika-text anchor=left target value='jxr console.log( getHighlights() )' rotation="0 -90 0" position=".7 1.10 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<a-troika-text anchor=left target value='jxr saveHighlights()' rotation="0 -90 0" position=".7 1.00 .2" scale="0.1 0.1 0.1"></a-troika-text>
+
+		<a-troika-text anchor=left target value='jxr nextPageForXMLText()' rotation="0 -90 0" position=".7 0.80 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<a-troika-text anchor=left target value='jxr previousPageForXMLText()' rotation="0 -90 0" position=".7 0.70 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<!--
+		<a-troika-text anchor=left target value='jxr nextPageForHighlight()' rotation="0 -90 0" position=".7 0.80 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<a-troika-text anchor=left target value='jxr previousPageForHighlight()' rotation="0 -90 0" position=".7 0.70 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		-->
+	</a-entity>
+
+	<a-entity visible=false id=recordercommands>
+	      <a-troika-text anchor=left target value="jxr setupRecorder()" rotation="0 90 0" position="-.7 1.30 .2" scale="0.1 0.1 0.1">
+		<a-entity scale=".2 .2 .2" class="icon microphone" position="-.5 0 0">
+			<a-sphere color=black segments-width=8 segments-height=8 position="0 1 0"></a-sphere>
+			<a-box color=gray scale="" position=""></a-box>
+			<a-box color=white scale=".4 2 .4" position="0 -1 0"></a-box>
+		</a-entity>
+		</a-troika-text>
+	      <a-troika-text anchor=left target value="jxr mediaRecorder.start(); microphone_recording_indicator.emit('start')" rotation="0 90 0" position="-.7 1.20 .2" scale="0.1 0.1 0.1">
+		<a-entity scale=".2 .2 .2" class="icon recordmicrophone" position="-.5 0 0">
+			<a-sphere id=microphone_recording_indicator 
+				animation="property: opacity; from: 1; to: 0; loop: true; dir: alternate; easing: easeInExpo; autoplay: false; startEvents:start; pauseEvents:pause;"
+				color=red scale=".7 .7 .1" segments-width=8 segments-height=8 position="0 1 1"></a-sphere>
+			<a-sphere color=black segments-width=8 segments-height=8 position="0 1 0"></a-sphere>
+			<a-box color=gray scale="" position=""></a-box>
+			<a-box color=white scale=".4 2 .4" position="0 -1 0"></a-box>
+		</a-entity>
+		</a-troika-text>
+	      <a-troika-text anchor=left target value="jxr mediaRecorder.stop(); microphone_recording_indicator.emit('pause')" rotation="0 90 0" position="-.7 1.10 .2" scale="0.1 0.1 0.1">
+		<a-entity scale=".2 .2 .2" class="icon nonmicrophone" position="-.5 0 0">
+			<a-sphere color=black segments-width=8 segments-height=8 position="0 1 0"></a-sphere>
+			<a-box color=gray scale="" position=""></a-box>
+			<a-box color=white scale=".4 2 .4" position="0 -1 0"></a-box>
+			<a-box color=red scale=".4 3 .4" rotation="0 0 45" position="0 0 .5"></a-box>
+			<a-box color=red scale=".4 3 .4" rotation="0 0 -45" position="0 0 .5"></a-box>
+		</a-entity>
+		</a-troika-text>
+		<a-troika-text anchor=left target value="jxr saveAudioFile(latest_audio_id+'.ogg')" rotation="0 90 0" position="-.7 1.00 .2" scale="0.1 0.1 0.1">
+			<a-entity scale=".2 .2 .2" class="icon audiofile" position="-.5 0 0">
+				<a-box color=white scale="2 2 .1" position="0 0 0"></a-box>
+				<a-cone color=gray radius-top=".1" rotation="0 0 -90" scale="1 1 .4" position="0 0 0"></a-cone>
+			</a-entity>
+		</a-troika-text>
+		<a-entity id=audiowidgets position="-.7 .90 .2"></a-entity>
+
+	</a-entity>
+
+	<a-entity visible=false position="-.4 0 -.5" target user-visibility="username:thicknesstesteruser" id="thicknesscommands">
+		<a-troika-text anchor=left target value='jxr adjustPinchThicknessLines(1)' position=".7 1.40 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<a-troika-text anchor=left target value='jxr adjustPinchThicknessLines(2)' position=".7 1.30 .2" scale="0.1 0.1 0.1"></a-troika-text>
+		<a-troika-text anchor=left target value='jxr adjustPinchThicknessLines(3)' position=".7 1.20 .2" scale="0.1 0.1 0.1"></a-troika-text>
+	</a-entity>
+
+	<a-entity id="roundedpageborders" target visible=false>
+		<a-entity position="0.5 1.4 -0.51">
+			<a-image position="0 0 .001" scale="1 1 .1" class="drawable" raycaster-listen src="#transparent" ></a-image>
+
+			<a-box id='pagebackgroundxml' scale=".0015 .0015 .001" width=612 height=792></a-box>
+			<a-torus position=".39 .5 0" color="#43A367" arc="90" radius=".1" radius-tubular="0.01"></a-torus>
+			<a-torus position="-.39 .5 0" rotation="0 0 90" color="#43A367" arc="90" radius=".1" radius-tubular="0.01"></a-torus>
+			<a-torus position=".39 -.5 0" rotation="180 0 0" color="#43A367" arc="90" radius=".1" radius-tubular="0.01"></a-torus>
+			<a-torus position="-.39 -.5 0" rotation="180 0 90" color="#43A367" arc="90" radius=".1" radius-tubular="0.01"></a-torus>
+			<a-cylinder position="-.49 0 0" color="#43A367" radius=".02" ></a-cylinder>
+			<a-cylinder position=".49 0 0" color="#43A367" radius=".02" ></a-cylinder>
+			<a-cylinder position="0 .6 0" height=.8 rotation="0 0 90" color="#43A367" radius=".02" ></a-cylinder>
+			<a-cylinder position="0 -.6 0" height=.8 rotation="0 0 90" color="#43A367" radius=".02" ></a-cylinder>
+		</a-entity>
+	</a-entity>
+
+	<a-entity visible=false position="-.4 1 -.5" target user-visibility="username:poweruser" id=highlighterA>
+		<a-entity rotation="-30 0 30">
+			<a-entity raycaster="direction:0 1 0; objects: .drawable; showLine: true; far: .03; lineColor: purple; lineOpacity: 0.5"></a-entity>
+			<a-cone color=gray radius-top="0" radius-bottom=".01" height=.05></a-cone>
+			<a-cylinder position="0 -.07 0" height=.1 color=gray radius=".01" ></a-cylinder>
+		</a-entity>
+	</a-entity>
+
+	<a-entity visible=false position="-.2 1 -.5" target user-visibility="username:poweruser" id=highlighterB>
+		<a-entity rotation="-30 0 30">
+			<a-entity raycaster="direction:0 1 0; objects: .drawable; showLine: true; far: .03; lineColor: #0cc; lineOpacity: 0.5"></a-entity>
+			<a-cone color=gray radius-top="0" radius-bottom=".01" height=.05></a-cone>
+			<a-cylinder position="0 -.07 0" height=.1 color=gray radius=".01" ></a-cylinder>
+		</a-entity>
+	</a-entity>
+
+	<a-box id=manuscript position="-.3 1.5 -.5" target onreleased="snapClosest()" scale=".21 .29 .01">
+		<a-troika-text anchor=left value='Manuscript...' color=black position="-0.4 .4 .51" scale="0.1 0.1 0.1"></a-troika-text>
+	</a-box>
+
+	<!-- cube grids, low opacity, no color, etc -->
+	<a-entity visible=false user-visibility="username:backgroundexploration" id=backgroundexploration>
+		<a-sphere wireframe=true animation="property: rotation.x; from: 0; to: 360; loop: true; dur: 100000;" color=red segments-width=8 radius=250 segments-height=8 ></a-sphere>
+		<a-sphere wireframe=true animation="property: rotation.y; from: 0; to: 360; loop: true; dur: 100000;" color=green segments-width=8 radius=250 segments-height=8 ></a-sphere>
+		<a-sphere wireframe=true animation="property: rotation.z; from: 0; to: 360; loop: true; dur: 100000;" color=blue segments-width=8 radius=250 segments-height=8 ></a-sphere>
+	</a-entity>
+
+	<a-entity visible=false user-visibility="username:backgroundexplorationlowopacity" id=backgroundexploration>
+		<a-sphere wireframe=true animation="property: rotation.x; from: 0; to: 360; loop: true; dur: 100000;" opacity=.1 color=red segments-width=8 radius=250 segments-height=8 ></a-sphere>
+		<a-sphere wireframe=true animation="property: rotation.y; from: 0; to: 360; loop: true; dur: 100000;" opacity=.1 color=green segments-width=8 radius=250 segments-height=8 ></a-sphere>
+		<a-sphere wireframe=true animation="property: rotation.z; from: 0; to: 360; loop: true; dur: 100000;" opacity=.1 color=blue segments-width=8 radius=250 segments-height=8 ></a-sphere>
+	</a-entity>
+
+	<a-entity visible=false user-visibility="username:backgroundexplorationlowwhitestatic" id=backgroundexploration>
+		<a-sphere wireframe=true segments-width=8 radius=250 segments-height=8 ></a-sphere>
+	</a-entity>
+
+	<a-entity visible=false user-visibility="username:backgroundexplorationlowwhite" id=backgroundexploration>
+		<a-sphere wireframe=true animation="property: rotation.x; from: 0; to: 360; loop: true; dur: 100000;" segments-width=8 radius=250 segments-height=8 ></a-sphere>
+		<a-sphere wireframe=true animation="property: rotation.y; from: 0; to: 360; loop: true; dur: 100000;" segments-width=8 radius=250 segments-height=8 ></a-sphere>
+		<a-sphere wireframe=true animation="property: rotation.z; from: 0; to: 360; loop: true; dur: 100000;" segments-width=8 radius=250 segments-height=8 ></a-sphere>
+	</a-entity>
+
+	<a-entity opacity=.1 gridplace visible=false user-visibility="username:backgroundexplorationlowwhitegrids" id=backgroundexploration>
+	</a-entity>
+
+	<a-troika-text visible=false user-visibility="username:demoqueueq1" id=demoqueueq1 anchor=left target value='jxr nextDemo()' position=".7 1.30 .5" rotation="0 180 0" scale="0.1 0.1 0.1"></a-troika-text>
+    </a-scene>
+    
+  </body>
+</html>
